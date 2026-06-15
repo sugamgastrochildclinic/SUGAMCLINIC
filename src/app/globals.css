@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --teal-primary: 18 +178 +166; /* #12B2A6 */
+  --teal-dark: 12 +141 +132;   /* #0C8D84 */
+  --teal-tint: 231 +246 +244;   /* #E7F6F4 */
+  --pink-cta: 232 +75 +140;     /* #E84B8C */
+  --pink-safe: 201 +54 +122;    /* #C9367A */
+  --blush: 252 +239 +244;       /* #FCEFF4 */
+  --cream: 255 +252 +239;       /* #FFFCEF */
+  --ink: 32 +38 +46;            /* #20262E */
+  --muted: 91 +100 +112;        /* #5B6470 */
+  --border: 240 +236 +239;      /* #F0ECEF */
+}
+
+@layer base {
+  html, body {
+    @apply bg-white text-[#20262E] font-sans antialiased overflow-x-hidden;
+    max-width: 100vw;
+  }
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(240, 236, 239, 0.6);
+}
+
+.glass-panel-dark {
+  background: rgba(32, 38, 46, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Glowing Elements for Gen Z design aesthetic */
+.glow-teal {
+  box-shadow: 0 0 25px rgba(18, 178, 166, 0.2);
+}
+
+.glow-pink {
+  box-shadow: 0 0 25px rgba(232, 75, 140, 0.25);
+}
+
+/* Responsive custom container */
+.section-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FFFCEF;
+}
+::-webkit-scrollbar-thumb {
+  background: #12B2A6;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0C8D84;
+}
+
+/* Loading screen — pure CSS (no JS animation lib on the critical path) */
+@keyframes loader-pop {
+  0% { transform: scale(0.82); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-loader-pop { animation: loader-pop 0.5s ease-out both; }
+
+@keyframes loader-bar {
+  0% { transform: translateX(-160%); }
+  100% { transform: translateX(460%); }
+}
+.animate-loader-bar { animation: loader-bar 1.1s ease-in-out infinite; }
+
+@keyframes loader-fade-up {
+  0% { transform: translateY(6px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-loader-fade-up { animation: loader-fade-up 0.5s ease-out 0.15s both; }
+
+/* Ticker Marquee Keyframes */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee 20s linear infinite reverse;
+}
+
+/* Hide Google Translate top bar & frame overlays */
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame,
+.goog-te-banner,
+.skiptranslate,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Scroll margin offset for desktop view sections */
+@media (min-width: 1024px) {
+  section {
+    scroll-margin-top: 1rem !important;
+  }
+}
