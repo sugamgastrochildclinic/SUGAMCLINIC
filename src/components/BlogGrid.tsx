@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, Calendar, User, Tag, ArrowUpRight, X } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { translations, Language } from "@/lib/translations";
 
 import ClientDate from "@/components/ClientDate";
@@ -164,12 +164,32 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
         )}
 
         {/* Article Reader Lightbox */}
+        <AnimatePresence>
         {selectedPost && (
-          <div ref={trapRef} className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedPost(null)} role="dialog" aria-modal="true" aria-label={selectedPost.title || "Article"}>
-            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 relative border border-brand-border" onClick={(e) => e.stopPropagation()}>
+          <motion.div
+            ref={trapRef}
+            className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setSelectedPost(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={selectedPost.title || "Article"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 relative border border-brand-border"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
               <button
                 onClick={() => setSelectedPost(null)}
-                className="absolute top-6 right-6 p-2 rounded-full border border-brand-border hover:bg-brand-blush text-brand-ink transition-all active:scale-95"
+                aria-label="Close article"
+                className="absolute top-6 right-6 p-2 rounded-full border border-brand-border hover:bg-brand-blush text-brand-ink transition-all active:scale-95 z-10 bg-white/80 backdrop-blur-sm"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -178,7 +198,7 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
                 {selectedPost.category}
               </span>
 
-              <h3 className="font-heading font-bold text-2xl sm:text-3xl text-brand-ink mt-4 mb-4">
+              <h3 className="font-heading font-bold text-2xl sm:text-3xl text-brand-ink mt-4 mb-4 pr-12">
                 {selectedPost.title}
               </h3>
 
@@ -215,9 +235,10 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
       </div>
     </section>
