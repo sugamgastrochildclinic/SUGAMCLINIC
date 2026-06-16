@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import ClinicSettings from "@/models/ClinicSettings";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePublic } from "@/lib/revalidate";
+import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/api/errors";
+import { parseBody } from "@/lib/api/validation";
+import { settingsUpdateSchema } from "@/lib/api/schemas";
 
 export async function GET() {
   try {
@@ -14,32 +16,30 @@ export async function GET() {
       settings = created.toObject();
     }
     return NextResponse.json(settings);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "GET /api/settings");
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectToDatabase();
-    const data = await req.json();
 
-    let settings = await ClinicSettings.findOne();
-    if (!settings) {
-      settings = new ClinicSettings(data);
-    } else {
-      Object.assign(settings, data);
-    }
+    // Whitelist the editable fields. Parsing strips unknown keys (_id, __v,
+    // timestamps, anything injected) so a crafted body can never mass-assign
+    // internal state — the previous Object.assign(settings, data) trusted every
+    // key in the request.
+    const data = parseBody(settingsUpdateSchema, await req.json());
 
+    const settings =
+      (await ClinicSettings.findOne()) ?? new ClinicSettings();
+    settings.set(data);
     await settings.save();
+
     revalidatePublic();
     return NextResponse.json(settings);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "PUT /api/settings");
   }
 }

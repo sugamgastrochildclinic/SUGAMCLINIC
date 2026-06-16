@@ -1,79 +1,63 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import Service from "@/models/Service";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePublic } from "@/lib/revalidate";
+import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError, NotFound } from "@/lib/api/errors";
+import { assertValidObjectId, parseBody } from "@/lib/api/validation";
+import { serviceCreateSchema, serviceUpdateSchema } from "@/lib/api/schemas";
 
 export async function GET() {
   try {
     await connectToDatabase();
-    const services = await Service.find().sort({ createdAt: -1 }).lean();
+    const services = await Service.find().select("-__v").sort({ createdAt: -1 }).lean();
     return NextResponse.json(services);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "GET /api/services");
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectToDatabase();
-    const data = await req.json();
+    const data = parseBody(serviceCreateSchema, await req.json());
     const service = await Service.create(data);
     revalidatePublic();
     return NextResponse.json(service);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "POST /api/services");
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectToDatabase();
-    const data = await req.json();
-    const { id, ...updateData } = data;
-
-    if (!id) {
-      return NextResponse.json({ error: "Missing service ID" }, { status: 400 });
-    }
-
-    const service = await Service.findByIdAndUpdate(id, updateData, { new: true });
+    const { id, ...rest } = await req.json();
+    assertValidObjectId(id, "service id");
+    const updateData = parseBody(serviceUpdateSchema, rest);
+    const service = await Service.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+    if (!service) throw NotFound("Service not found");
     revalidatePublic();
     return NextResponse.json(service);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "PUT /api/services");
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectToDatabase();
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json({ error: "Missing service ID" }, { status: 400 });
-    }
-
+    const id = assertValidObjectId(new URL(req.url).searchParams.get("id"), "service id");
     await Service.findByIdAndDelete(id);
     revalidatePublic();
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "DELETE /api/services");
   }
 }

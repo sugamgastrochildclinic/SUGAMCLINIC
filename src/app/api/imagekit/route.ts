@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getImageKitInstance } from "@/lib/imagekit";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError, BadRequest } from "@/lib/api/errors";
+
+// Accepted upload formats and a hard ceiling on payload size. The admin picker
+// resizes/compresses client-side; this is the server-side backstop so a crafted
+// request can't push an arbitrary type or a huge payload through to the CDN.
+const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB decoded
+const DATA_URL_RE = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/;
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     const ik = getImageKitInstance();
     const authParams = ik.getAuthenticationParameters();
     return NextResponse.json(authParams);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "GET /api/imagekit");
   }
 }
 
@@ -29,27 +32,46 @@ export async function GET() {
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    await requireAdmin();
 
     const { file, fileName } = await req.json();
     if (!file || typeof file !== "string") {
-      return NextResponse.json({ error: "Missing file" }, { status: 400 });
+      throw BadRequest("Missing file");
     }
+
+    // Only accept a base64 image data URL, verify the declared MIME type, and
+    // enforce a size cap on the decoded bytes before sending to ImageKit.
+    const match = DATA_URL_RE.exec(file.trim());
+    if (!match) {
+      throw BadRequest("File must be a base64-encoded image data URL");
+    }
+    const mime = match[1].toLowerCase();
+    if (!ALLOWED_MIME.includes(mime)) {
+      throw BadRequest(`Unsupported image type: ${mime}`);
+    }
+    // base64 length → decoded byte size (4 chars ≈ 3 bytes, minus padding).
+    const b64 = match[2];
+    const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+    const sizeBytes = Math.floor((b64.length * 3) / 4) - padding;
+    if (sizeBytes > MAX_UPLOAD_BYTES) {
+      throw BadRequest("Image exceeds the 8 MB upload limit");
+    }
+
+    // Sanitize the supplied file name: strip path separators / control chars.
+    const safeName = String(fileName || "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(0, 120);
 
     const ik = getImageKitInstance();
     const result = await ik.upload({
-      file, // data URL or base64 string — ImageKit accepts both
-      fileName: fileName || `upload-${Date.now()}`,
+      file,
+      fileName: safeName || `upload-${Date.now()}`,
       folder: "/sugam-clinic",
       useUniqueFileName: true,
     });
 
     return NextResponse.json({ url: result.url, fileId: result.fileId });
-  } catch (error: any) {
-    console.error("ImageKit upload error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "POST /api/imagekit");
   }
 }

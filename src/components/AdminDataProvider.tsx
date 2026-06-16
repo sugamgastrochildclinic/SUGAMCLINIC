@@ -138,7 +138,10 @@ export function AdminDataProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("/api/appointments");
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) setAppointments(data);
+        // API now returns a { data, page, limit, total } envelope; tolerate the
+        // legacy bare-array shape too.
+        const list = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(list)) setAppointments(list);
       }
     } catch (err) {
       console.error("Failed to load appointments:", err);

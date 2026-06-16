@@ -1,85 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import Review from "@/models/Review";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePublic } from "@/lib/revalidate";
+import { z } from "zod";
+import { requireAdmin, getAdminSession } from "@/lib/api/auth";
+import { handleApiError, NotFound } from "@/lib/api/errors";
+import { assertValidObjectId, parseBody } from "@/lib/api/validation";
+import { reviewUpdateSchema } from "@/lib/api/schemas";
 
-export async function GET(req: NextRequest) {
+const reviewSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  rating: z.coerce.number().int().min(1).max(5),
+  reviewText: z.string().trim().min(1).max(2000),
+  photo: z.string().trim().max(500).optional().default(""),
+});
+
+export async function GET() {
   try {
     await connectToDatabase();
-    const session = await getServerSession(authOptions);
-    const isAdmin = session && (session.user as any).role === "admin";
+    const isAdmin = !!(await getAdminSession());
 
     const query = isAdmin ? {} : { approved: true };
     const reviews = await Review.find(query).sort({ createdAt: -1 }).lean();
     return NextResponse.json(reviews);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "GET /api/reviews");
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
-    const data = await req.json();
+    const raw = await req.json();
+    const data = parseBody(reviewSchema, raw);
 
-    const session = await getServerSession(authOptions);
-    const isAdmin = session && (session.user as any).role === "admin";
+    const isAdmin = !!(await getAdminSession());
+    // Only an admin may publish directly; public submissions are always queued
+    // for moderation (approved:false). `approved` is never taken from a public body.
+    const approved = isAdmin ? raw?.approved === true : false;
 
-    if (!isAdmin) {
-      data.approved = false;
-    }
-
-    const review = await Review.create(data);
+    const review = await Review.create({ ...data, approved });
+    if (approved) revalidatePublic();
     return NextResponse.json(review);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "POST /api/reviews");
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectToDatabase();
-    const data = await req.json();
-    const { id, ...updateData } = data;
-
-    if (!id) {
-      return NextResponse.json({ error: "Missing review ID" }, { status: 400 });
-    }
-
-    const review = await Review.findByIdAndUpdate(id, updateData, { new: true });
+    const { id, ...rest } = await req.json();
+    assertValidObjectId(id, "review id");
+    const updateData = parseBody(reviewUpdateSchema, rest);
+    const review = await Review.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+    if (!review) throw NotFound("Review not found");
     revalidatePublic();
     return NextResponse.json(review);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "PUT /api/reviews");
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    await requireAdmin();
     await connectToDatabase();
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json({ error: "Missing review ID" }, { status: 400 });
-    }
-
+    const id = assertValidObjectId(new URL(req.url).searchParams.get("id"), "review id");
     await Review.findByIdAndDelete(id);
     revalidatePublic();
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "DELETE /api/reviews");
   }
 }

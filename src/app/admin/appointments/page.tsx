@@ -77,6 +77,12 @@ export default function AdminAppointmentsPage() {
 
   useEffect(() => {
     fetchAppointments();
+    // Honor a ?status= deep link from the dashboard stat cards.
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("status");
+    if (s && ["All", "Pending", "Confirmed", "Completed", "Cancelled"].includes(s)) {
+      setStatusFilter(s);
+    }
   }, []);
 
   useEffect(() => {
@@ -90,7 +96,8 @@ export default function AdminAppointmentsPage() {
     fetch("/api/appointments")
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) setAppointments(data);
+        const list = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(list)) setAppointments(list);
         setLoading(false);
       })
       .catch((err) => {
@@ -177,7 +184,8 @@ export default function AdminAppointmentsPage() {
       appt.name?.toLowerCase().includes(q) ||
       appt.phone?.toLowerCase().includes(q) ||
       appt.email?.toLowerCase().includes(q) ||
-      appt.childName?.toLowerCase().includes(q)
+      appt.childName?.toLowerCase().includes(q) ||
+      appt.visitReason?.toLowerCase().includes(q)
     );
   };
 
@@ -258,7 +266,8 @@ export default function AdminAppointmentsPage() {
     }
     const headers = [
       "Name", "Phone", "Email", "Date", "Time", "Doctor", "Specialization",
-      "Status", "Is Child", "Child Name", "Child DOB", "Vaccination Reminders",
+      "Status", "Visit Reason", "Symptoms", "Additional Notes",
+      "Is Child", "Child Name", "Child DOB", "Vaccination Reminders",
       "Message", "Booked On",
     ];
     const esc = (v: any) => {
@@ -274,7 +283,8 @@ export default function AdminAppointmentsPage() {
       [
         a.name, a.phone, a.email, a.date, a.time,
         a.doctor?.name || "", a.doctor?.specialization || "",
-        a.status, a.isChild ? "Yes" : "No", a.childName || "", a.childDob || "",
+        a.status, a.visitReason || "", a.symptoms || "", a.additionalNotes || "",
+        a.isChild ? "Yes" : "No", a.childName || "", a.childDob || "",
         a.vaccinationReminderEnabled ? "Yes" : "No", a.message || "",
         a.createdAt ? new Date(a.createdAt).toLocaleString() : "",
       ].map(esc).join(",")
@@ -554,6 +564,11 @@ export default function AdminAppointmentsPage() {
                               <p className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {appt.phone}</p>
                               <p className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {appt.email}</p>
                             </div>
+                            {appt.visitReason && (
+                              <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal-tint/50 text-teal-dark border border-teal/10">
+                                {appt.visitReason}
+                              </span>
+                            )}
                             {appt.message && (
                               <div className="mt-2.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-w-xs text-[10px] leading-relaxed">
                                 <span className="font-bold block text-slate-700 mb-0.5">Note:</span>

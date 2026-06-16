@@ -3,25 +3,21 @@ import { connectToDatabase } from "@/lib/db";
 import ContactMessage from "@/models/ContactMessage";
 import { sendEmail } from "@/lib/email";
 import { renderEmail, quoteBlock, esc, nl2br } from "@/lib/emailTemplate";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/api/errors";
+import { assertValidObjectId } from "@/lib/api/validation";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await requireAdmin();
 
     await connectToDatabase();
     const { id, subject, message } = await req.json();
 
     // --- Validation ---
-    if (!id) {
-      return NextResponse.json({ error: "Missing message ID" }, { status: 400 });
-    }
+    assertValidObjectId(id, "message id");
     if (!message || !message.trim()) {
       return NextResponse.json({ error: "Reply message is required" }, { status: 400 });
     }
@@ -79,8 +75,7 @@ export async function POST(req: NextRequest) {
     await msg.save();
 
     return NextResponse.json({ success: true, message: msg });
-  } catch (error: any) {
-    console.error("Contact reply error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, "POST /api/contact/reply");
   }
 }
