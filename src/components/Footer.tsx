@@ -140,6 +140,30 @@ export default function Footer({ settings, lang }: FooterProps) {
             </Link>
           </div>
         </div>
+
+        {/* Developer credit */}
+        <div className="mt-4 text-center text-xs text-gray-500">
+          <p>
+            {lang === "en" ? "Developed by" : "உருவாக்கியவர்"}{" "}
+            <a
+              href="https://www.fiverr.com/senthilragu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-teal hover:text-white transition-colors"
+            >
+              Senthil
+            </a>{" "}
+            &amp;{" "}
+            <a
+              href="https://www.fiverr.com/skateranbu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-teal hover:text-white transition-colors"
+            >
+              Anbu
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );
