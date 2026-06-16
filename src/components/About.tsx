@@ -29,6 +29,9 @@ const fadeRight = {
 
 export default function About({ settings, lang }: AboutProps) {
   const t = translations[lang];
+  // Admin-editable About content overrides the per-language defaults. A blank
+  // (or missing) field falls back to the translation for the active language.
+  const a = (key: keyof typeof t) => (settings?.[key]?.trim?.() ? settings[key] : t[key]);
 
   return (
     <section id="about" className="py-24 bg-white border-b border-brand-border/40 relative overflow-hidden">
@@ -84,8 +87,8 @@ export default function About({ settings, lang }: AboutProps) {
                 className="bg-teal-tint p-8 rounded-3xl border border-teal/10 hover:shadow-lg transition-all flex-1 flex flex-col justify-center"
               >
                 <Compass className="w-10 h-10 text-teal mb-4 shrink-0" />
-                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{t.aboutMission}</h4>
-                <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{t.aboutMissionDesc}</p>
+                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutMission")}</h4>
+                <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{a("aboutMissionDesc")}</p>
               </motion.div>
               <motion.div
                 custom={1} variants={fadeUp} initial="hidden"
@@ -93,8 +96,8 @@ export default function About({ settings, lang }: AboutProps) {
                 className="bg-brand-blush p-8 rounded-3xl border border-pink/10 hover:shadow-lg transition-all flex-1 flex flex-col justify-center"
               >
                 <Eye className="w-10 h-10 text-pink-safe mb-4 shrink-0" />
-                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{t.aboutVision}</h4>
-                <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{t.aboutVisionDesc}</p>
+                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutVision")}</h4>
+                <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{a("aboutVisionDesc")}</p>
               </motion.div>
             </div>
             <div className="flex items-stretch h-full">
@@ -104,8 +107,8 @@ export default function About({ settings, lang }: AboutProps) {
                 className="bg-brand-cream p-8 rounded-3xl border border-[#F0D590]/20 hover:shadow-lg transition-all w-full flex flex-col justify-center"
               >
                 <Award className="w-10 h-10 text-[#C19C38] mb-4 shrink-0" />
-                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{t.aboutPremium}</h4>
-                <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{t.aboutPremiumDesc}</p>
+                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutPremium")}</h4>
+                <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{a("aboutPremiumDesc")}</p>
               </motion.div>
             </div>
           </motion.div>
@@ -125,13 +128,13 @@ export default function About({ settings, lang }: AboutProps) {
             <div className="relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-tint text-teal-dark text-xs font-semibold mb-4 w-fit">
                 <ShieldCheck className="w-4 h-4 text-teal" />
-                <span>{t.aboutBadge}</span>
+                <span>{a("aboutBadge")}</span>
               </div>
               <h2 className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl text-brand-ink mb-6 leading-tight">
-                {t.aboutTitle}
+                {a("aboutTitle")}
               </h2>
-              <p className="text-brand-muted text-sm sm:text-base leading-relaxed mb-6">{t.aboutDesc1}</p>
-              <p className="text-brand-muted text-sm sm:text-base leading-relaxed">{t.aboutDesc2}</p>
+              <p className="text-brand-muted text-sm sm:text-base leading-relaxed mb-6">{a("aboutDesc1")}</p>
+              <p className="text-brand-muted text-sm sm:text-base leading-relaxed">{a("aboutDesc2")}</p>
             </div>
           </motion.div>
 

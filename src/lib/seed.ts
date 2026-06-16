@@ -15,8 +15,8 @@ export async function seedDatabase() {
   if (!settings) {
     settings = await ClinicSettings.create({
       clinicName: "Sugam Child & Gastro Care Clinic",
-      tagline: "Premium Pediatric, Neonatal & Gastroenterology Care",
-      address: "Sugam Clinic, 14/2, Hospital Road, Near Bus Stand, Landmark Area, Tamil Nadu",
+      tagline: "Expert Pediatric, Neonatal & Gastroenterology care in Venkittapuram, Coimbatore",
+      address: "Sugam Child & Gastro Care Clinic, Ambethkar Road, Near Sindhi Vidyalaya, Venkittapuram, Coimbatore, Tamil Nadu 641025",
       phone: "+91 94432 12345",
       email: "contact@sugamclinic.com",
       whatsapp: "+91 94432 12345",

@@ -160,8 +160,11 @@ export default function Testimonials({ reviews, lang }: TestimonialsProps) {
         }),
       });
 
-      if (!res.ok) throw new Error("Could not submit review");
-      
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok || resData?.error) {
+        throw new Error(resData?.error || "Could not submit review");
+      }
+
       setName("");
       setRating(5);
       setReviewText("");
@@ -169,6 +172,10 @@ export default function Testimonials({ reviews, lang }: TestimonialsProps) {
     } catch (err) {
       console.error(err);
       setErrorMsg("Failed to submit. Please try again.");
+    } finally {
+      // Always re-enable the button — otherwise a failed submit leaves it
+      // stuck on "Submitting review..." with no way to retry.
+      setSubmitting(false);
     }
   };
 

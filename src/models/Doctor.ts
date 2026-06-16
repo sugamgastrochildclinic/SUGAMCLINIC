@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const DoctorSchema = new Schema(
   {
@@ -20,4 +20,4 @@ const DoctorSchema = new Schema(
 
 DoctorSchema.index({ createdAt: -1 });
 
-export default models.Doctor || model("Doctor", DoctorSchema);
+export default mongoose.models.Doctor || mongoose.model("Doctor", DoctorSchema);

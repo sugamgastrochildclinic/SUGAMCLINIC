@@ -9,6 +9,15 @@ import BlogPost from "@/models/BlogPost";
 import Gallery from "@/models/Gallery";
 import MainHome from "@/components/MainHome";
 import { seedDatabase } from "@/lib/seed";
+import JsonLd from "@/components/JsonLd";
+import {
+  graph,
+  organizationSchema,
+  medicalClinicSchema,
+  websiteSchema,
+  faqSchema,
+  physicianSchemas,
+} from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -142,8 +151,8 @@ export default async function Page() {
   // Fallback / Mock Data if DB connection isn't working
   const finalSettings = settings || {
     clinicName: "Sugam Child & Gastro Care Clinic",
-    tagline: "Premium Pediatric, Neonatal & Gastroenterology Care",
-    address: "Sugam Clinic, 14/2, Hospital Road, Near Bus Stand, Tamil Nadu",
+    tagline: "Expert Pediatric, Neonatal & Gastroenterology care in Venkittapuram, Coimbatore",
+    address: "Sugam Child & Gastro Care Clinic, Ambethkar Road, Near Sindhi Vidyalaya, Venkittapuram, Coimbatore, Tamil Nadu 641025",
     phone: "+91 94432 12345",
     email: "contact@sugamclinic.com",
     whatsapp: "+91 94432 12345",
@@ -180,15 +189,27 @@ export default async function Page() {
       doctor: item.doctor ? item.doctor.toString() : undefined,
     }));
 
+  const settingsForSchema = JSON.parse(JSON.stringify(finalSettings));
+  const structuredData = graph(
+    websiteSchema(),
+    organizationSchema(settingsForSchema),
+    medicalClinicSchema(settingsForSchema),
+    faqSchema(faqs),
+    ...physicianSchemas(serialize(finalDoctors))
+  );
+
   return (
-    <MainHome
-      settings={JSON.parse(JSON.stringify(finalSettings))}
-      doctors={serialize(finalDoctors)}
-      services={serialize(finalServices)}
-      reviews={serialize(reviews)}
-      faqs={serialize(faqs)}
-      blogs={serialize(blogs)}
-      gallery={serialize(gallery)}
-    />
+    <>
+      <JsonLd data={structuredData} />
+      <MainHome
+        settings={settingsForSchema}
+        doctors={serialize(finalDoctors)}
+        services={serialize(finalServices)}
+        reviews={serialize(reviews)}
+        faqs={serialize(faqs)}
+        blogs={serialize(blogs)}
+        gallery={serialize(gallery)}
+      />
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const ServiceSchema = new Schema(
   {
@@ -12,4 +12,4 @@ const ServiceSchema = new Schema(
 
 ServiceSchema.index({ createdAt: -1 });
 
-export default models.Service || model("Service", ServiceSchema);
+export default mongoose.models.Service || mongoose.model("Service", ServiceSchema);

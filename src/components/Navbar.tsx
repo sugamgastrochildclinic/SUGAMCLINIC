@@ -174,6 +174,9 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
               <div className="relative notranslate" translate="no">
                 <button
                   onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                  aria-label="Select language"
+                  aria-haspopup="menu"
+                  aria-expanded={langDropdownOpen}
                   className="flex items-center gap-1.5 bg-teal-tint/50 border border-teal/15 px-3 py-1 rounded-full text-teal-dark font-bold text-xs hover:bg-teal-tint transition-all cursor-pointer shadow-sm"
                 >
                   <Globe className="w-3.5 h-3.5 text-teal shrink-0" />
@@ -229,6 +232,8 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
           <div className="lg:hidden flex items-center gap-2">
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
               className="p-1.5 rounded-md text-brand-ink hover:text-teal focus:outline-none shrink-0"
               animate={{ rotate: isOpen ? 90 : 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}

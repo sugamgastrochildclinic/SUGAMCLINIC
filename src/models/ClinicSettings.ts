@@ -1,13 +1,13 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const ClinicSettingsSchema = new Schema(
   {
     clinicName: { type: String, default: "Sugam Child & Gastro Care Clinic" },
-    tagline: { type: String, default: "Premium Pediatric, Neonatal & Gastroenterology Care" },
+    tagline: { type: String, default: "Expert Pediatric, Neonatal & Gastroenterology care in Venkittapuram, Coimbatore" },
     logo: { type: String, default: "" },
     favicon: { type: String, default: "" },
     heroImage: { type: String, default: "" },
-    address: { type: String, default: "123 Healthcare Avenue, Medical District" },
+    address: { type: String, default: "Sugam Child & Gastro Care Clinic, Ambethkar Road, Near Sindhi Vidyalaya, Venkittapuram, Coimbatore, Tamil Nadu 641025" },
     phone: { type: String, default: "+91 98765 43210" },
     email: { type: String, default: "info@sugamclinic.com" },
     whatsapp: { type: String, default: "+91 98765 43210" },
@@ -21,6 +21,19 @@ const ClinicSettingsSchema = new Schema(
     seoDescription: { type: String, default: "Expert child health, neonatology, gastroenterology, and liver care services by top specialists at Sugam Clinic." },
     seoKeywords: { type: String, default: "pediatric, gastroenterology, child health, liver care, Sugam clinic" },
     ogImage: { type: String, default: "" },
+
+    // About section content. Blank = fall back to the per-language defaults in
+    // lib/translations.ts. A non-empty value here overrides ALL languages.
+    aboutBadge: { type: String, default: "" },
+    aboutTitle: { type: String, default: "" },
+    aboutDesc1: { type: String, default: "" },
+    aboutDesc2: { type: String, default: "" },
+    aboutMission: { type: String, default: "" },
+    aboutMissionDesc: { type: String, default: "" },
+    aboutVision: { type: String, default: "" },
+    aboutVisionDesc: { type: String, default: "" },
+    aboutPremium: { type: String, default: "" },
+    aboutPremiumDesc: { type: String, default: "" },
   },
   { timestamps: true }
 );

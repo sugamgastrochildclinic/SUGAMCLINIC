@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const ReviewSchema = new Schema(
   {
@@ -13,4 +13,4 @@ const ReviewSchema = new Schema(
 
 ReviewSchema.index({ approved: 1, createdAt: -1 });
 
-export default models.Review || model("Review", ReviewSchema);
+export default mongoose.models.Review || mongoose.model("Review", ReviewSchema);

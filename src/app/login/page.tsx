@@ -27,7 +27,11 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setErrorMsg("Invalid email or password.");
+        if (result.error !== "CredentialsSignin" && result.error !== "Configuration") {
+          setErrorMsg(result.error);
+        } else {
+          setErrorMsg("Invalid email or password.");
+        }
       } else {
         router.push("/admin");
         router.refresh();
@@ -123,6 +127,15 @@ export default function LoginPage() {
               <span>Sign In as Admin</span>
             )}
           </button>
+
+          <div className="text-center">
+            <Link
+              href="/reset-password"
+              className="text-xs font-semibold text-brand-muted hover:text-teal"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </form>
       </div>
     </main>

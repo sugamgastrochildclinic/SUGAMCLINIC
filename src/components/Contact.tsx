@@ -13,6 +13,8 @@ const contactSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number is required"),
   message: z.string().min(5, "Message must be at least 5 characters"),
+  // Honeypot: hidden from humans, only bots fill it. Server drops if set.
+  website: z.string().optional(),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -62,7 +64,7 @@ export default function Contact({ settings, lang }: ContactProps) {
     }
   };
 
-  const address = settings?.address || "14/2, Hospital Road, Near Bus Stand, Sugam Clinic Area";
+  const address = settings?.address || "Sugam Child & Gastro Care Clinic, Ambethkar Road, Near Sindhi Vidyalaya, Venkittapuram, Coimbatore, Tamil Nadu 641025";
   const phone = settings?.phone || "+91 94432 12345";
   const email = settings?.email || "contact@sugamclinic.com";
   const workingHours = settings?.workingHours || "Mon - Sat: 9:00 AM - 8:30 PM";
@@ -220,6 +222,14 @@ export default function Contact({ settings, lang }: ContactProps) {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Honeypot — hidden from real users, catches bots. */}
+                  <div className="absolute left-[-9999px] top-[-9999px] w-px h-px overflow-hidden" aria-hidden="true">
+                    <label>
+                      Website
+                      <input type="text" tabIndex={-1} autoComplete="off" {...register("website")} />
+                    </label>
+                  </div>
+
                   {errorMsg && (
                     <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-sm rounded-xl">
                       {errorMsg}

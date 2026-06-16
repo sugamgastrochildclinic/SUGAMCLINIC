@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const GallerySchema = new Schema(
   {
@@ -12,4 +12,4 @@ const GallerySchema = new Schema(
 
 GallerySchema.index({ order: 1, createdAt: -1 });
 
-export default models.Gallery || model("Gallery", GallerySchema);
+export default mongoose.models.Gallery || mongoose.model("Gallery", GallerySchema);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Save, Loader2, Settings, ShieldAlert, Globe } from "lucide-react";
+import { Save, Loader2, Settings, ShieldAlert, Globe, Info } from "lucide-react";
 import ImageUploader from "@/components/ImageUploader";
 
 import { useAdminData } from "@/components/AdminDataProvider";
@@ -27,6 +27,16 @@ export default function AdminSettingsPage() {
     seoTitle: "",
     seoDescription: "",
     seoKeywords: "",
+    aboutBadge: "",
+    aboutTitle: "",
+    aboutDesc1: "",
+    aboutDesc2: "",
+    aboutMission: "",
+    aboutMissionDesc: "",
+    aboutVision: "",
+    aboutVisionDesc: "",
+    aboutPremium: "",
+    aboutPremiumDesc: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -269,6 +279,128 @@ export default function AdminSettingsPage() {
               onChange={handleChange}
               placeholder="pediatrician, gastrologist, neonate care"
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+            />
+          </div>
+        </div>
+
+        {/* About Section */}
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div className="border-b border-slate-100 pb-4">
+            <h2 className="font-heading font-bold text-lg text-slate-800 flex items-center gap-2">
+              <Info className="w-5 h-5 text-teal" />
+              <span>About Section</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Shown on the homepage About block. Leave a field blank to use the built-in multi-language default;
+              any value entered here overrides all languages.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Badge Label</label>
+              <input
+                type="text"
+                name="aboutBadge"
+                value={settings.aboutBadge || ""}
+                onChange={handleChange}
+                placeholder="About Sugam Clinic"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Heading</label>
+              <input
+                type="text"
+                name="aboutTitle"
+                value={settings.aboutTitle || ""}
+                onChange={handleChange}
+                placeholder="Dedicated pediatric & gastro care under one roof"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Paragraph 1</label>
+            <textarea
+              name="aboutDesc1"
+              rows={3}
+              value={settings.aboutDesc1 || ""}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Paragraph 2</label>
+            <textarea
+              name="aboutDesc2"
+              rows={3}
+              value={settings.aboutDesc2 || ""}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Mission Title</label>
+              <input
+                type="text"
+                name="aboutMission"
+                value={settings.aboutMission || ""}
+                onChange={handleChange}
+                placeholder="Our Mission"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+              <textarea
+                name="aboutMissionDesc"
+                rows={2}
+                value={settings.aboutMissionDesc || ""}
+                onChange={handleChange}
+                placeholder="Mission description"
+                className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Vision Title</label>
+              <input
+                type="text"
+                name="aboutVision"
+                value={settings.aboutVision || ""}
+                onChange={handleChange}
+                placeholder="Our Vision"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+              <textarea
+                name="aboutVisionDesc"
+                rows={2}
+                value={settings.aboutVisionDesc || ""}
+                onChange={handleChange}
+                placeholder="Vision description"
+                className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Premium Standards Title</label>
+            <input
+              type="text"
+              name="aboutPremium"
+              value={settings.aboutPremium || ""}
+              onChange={handleChange}
+              placeholder="Premium Standards"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+            />
+            <textarea
+              name="aboutPremiumDesc"
+              rows={2}
+              value={settings.aboutPremiumDesc || ""}
+              onChange={handleChange}
+              placeholder="Premium standards description"
+              className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
             />
           </div>
         </div>

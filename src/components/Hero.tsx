@@ -34,13 +34,13 @@ export default function Hero({ settings, lang }: HeroProps) {
       </div>
 
       {/* Gradient overlay: White on left (desktop) or top (mobile), fading to transparent where the baby is */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/80 via-white/50 to-white/10 md:bg-gradient-to-r md:from-white/95 md:via-white/70 md:to-transparent" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/80 via-white/50 to-white/10 md:bg-gradient-to-r md:from-white/95 md:via-white/45 md:via-40% md:to-transparent" />
 
       {/* Main Content Area (z-20 to sit on top of background & gradient overlay) */}
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-between">
         
         {/* Top/Middle Text Content - Pushed lower on desktop, higher on mobile */}
-        <div className="w-full max-w-3xl mt-4 sm:mt-16">
+        <div className="w-full max-w-3xl mt-2 sm:-mt-6">
           {/* Pill Badge */}
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-teal-tint/90 border border-teal/20 text-teal-dark text-xs sm:text-sm font-semibold mb-4 sm:mb-6 w-fit shadow-sm"
@@ -55,7 +55,12 @@ export default function Hero({ settings, lang }: HeroProps) {
           >
             {t.heroTitlePrefix}
             <span className="text-teal font-extrabold relative inline-block">
-              {t.heroTitleHighlight}
+              {t.heroTitleHighlight.split("&").map((part, i, arr) => (
+                <React.Fragment key={i}>
+                  {part}
+                  {i < arr.length - 1 && <span className="text-brand-ink">&amp;</span>}
+                </React.Fragment>
+              ))}
             </span>
             {t.heroTitleSuffix}
           </h1>

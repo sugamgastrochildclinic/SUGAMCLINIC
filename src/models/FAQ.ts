@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const FAQSchema = new Schema(
   {
@@ -10,4 +10,4 @@ const FAQSchema = new Schema(
 
 FAQSchema.index({ createdAt: -1 });
 
-export default models.FAQ || model("FAQ", FAQSchema);
+export default mongoose.models.FAQ || mongoose.model("FAQ", FAQSchema);

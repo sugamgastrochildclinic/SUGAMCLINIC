@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 // A single admin reply in the conversation thread.
 const ReplySchema = new Schema(
@@ -34,4 +34,4 @@ const ContactMessageSchema = new Schema(
 ContactMessageSchema.index({ createdAt: -1 });
 ContactMessageSchema.index({ status: 1 });
 
-export default models.ContactMessage || model("ContactMessage", ContactMessageSchema);
+export default mongoose.models.ContactMessage || mongoose.model("ContactMessage", ContactMessageSchema);

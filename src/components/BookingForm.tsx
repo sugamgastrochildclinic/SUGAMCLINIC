@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Calendar, Clock, User, Phone, Mail, MessageSquare, Baby, CheckCircle2, Loader2, Heart } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, MessageSquare, Baby, CheckCircle2, Loader2, Heart, Stethoscope, ClipboardList } from "lucide-react";
 import { translations, Language } from "@/lib/translations";
+import { TIME_SLOTS, todayInClinicTZ } from "@/lib/slots";
+import { VISIT_REASONS } from "@/lib/visitReasons";
+
+type SlotInfo = { time: string; available: boolean; past: boolean; full: boolean };
 
 const bookingSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -14,11 +18,16 @@ const bookingSchema = z.object({
   date: z.string().min(1, "Please select a date"),
   time: z.string().min(1, "Please select a preferred slot"),
   doctor: z.string().min(1, "Please select a doctor"),
+  visitReason: z.string().min(1, "Please select a reason for the visit"),
+  symptoms: z.string().optional(),
+  additionalNotes: z.string().optional(),
   message: z.string().optional(),
   isChild: z.boolean().default(false),
   childName: z.string().optional(),
   childDob: z.string().optional(),
   vaccinationReminderEnabled: z.boolean().default(false),
+  // Honeypot: hidden from humans, only bots fill it. Server drops if set.
+  website: z.string().optional(),
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
@@ -40,6 +49,7 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -50,6 +60,41 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
   });
 
   const isChildChecked = watch("isChild");
+  const selectedDoctor = watch("doctor");
+  const selectedDate = watch("date");
+
+  const today = todayInClinicTZ();
+  const [slots, setSlots] = useState<SlotInfo[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
+  // Fetch real availability whenever doctor + date are both chosen. Booked /
+  // past slots come back unavailable so we can disable them. Server re-checks
+  // on submit, so this is purely to stop users picking a dead slot.
+  const loadAvailability = React.useCallback(async (doctor: string, date: string) => {
+    if (!doctor || !date) {
+      setSlots([]);
+      return;
+    }
+    setSlotsLoading(true);
+    try {
+      const res = await fetch(`/api/appointments/availability?doctor=${doctor}&date=${date}`);
+      const data = await res.json();
+      setSlots(Array.isArray(data.slots) ? data.slots : []);
+    } catch {
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Slot taken for one doctor/date may be free for another — clear stale pick.
+    setValue("time", "");
+    loadAvailability(selectedDoctor, selectedDate);
+  }, [selectedDoctor, selectedDate, setValue, loadAvailability]);
+
+  const slotsReady = Boolean(selectedDoctor && selectedDate);
+  const noSlotsFree = slotsReady && !slotsLoading && slots.length > 0 && slots.every((s) => !s.available);
 
   const onSubmit = async (data: BookingFormValues) => {
     setLoading(true);
@@ -68,23 +113,16 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
 
       setSuccess(true);
       reset();
+      setSlots([]);
     } catch (err: any) {
       setErrorMsg(err.message || "Something went wrong. Please try again.");
+      // A 409 (slot just taken) or any rejection may mean availability changed —
+      // refresh so the just-booked slot shows as unavailable.
+      if (selectedDoctor && selectedDate) loadAvailability(selectedDoctor, selectedDate);
     } finally {
       setLoading(false);
     }
   };
-
-  const timeSlots = [
-    "09:00 AM - 10:00 AM",
-    "10:00 AM - 11:00 AM",
-    "11:00 AM - 12:00 PM",
-    "12:00 PM - 01:00 PM",
-    "05:00 PM - 06:00 PM",
-    "06:00 PM - 07:00 PM",
-    "07:00 PM - 08:00 PM",
-    "08:00 PM - 08:30 PM",
-  ];
 
   return (
     <section id="booking" className="py-24 bg-gradient-to-tr from-teal-tint/50 via-white to-brand-blush/30 border-b border-brand-border/40 relative overflow-hidden">
@@ -171,6 +209,14 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Honeypot — hidden from real users, catches bots. */}
+                  <div className="absolute left-[-9999px] top-[-9999px] w-px h-px overflow-hidden" aria-hidden="true">
+                    <label>
+                      Website
+                      <input type="text" tabIndex={-1} autoComplete="off" {...register("website")} />
+                    </label>
+                  </div>
+
                   {errorMsg && (
                     <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-sm rounded-xl">
                       {errorMsg}
@@ -264,6 +310,7 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
                         <Calendar className="absolute left-4 top-3.5 w-5 h-5 text-brand-muted/70" />
                         <input
                           type="date"
+                          min={today}
                           {...register("date")}
                           className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-border focus:border-teal focus:outline-none transition-colors text-sm text-brand-ink"
                         />
@@ -280,17 +327,86 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
                         <Clock className="absolute left-4 top-3.5 w-5 h-5 text-brand-muted/70" />
                         <select
                           {...register("time")}
+                          disabled={!slotsReady || slotsLoading}
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-border focus:border-teal focus:outline-none transition-colors text-sm text-brand-ink appearance-none bg-white disabled:bg-slate-50 disabled:text-brand-muted/60 disabled:cursor-not-allowed"
+                        >
+                          <option value="">
+                            {!slotsReady
+                              ? "Select doctor & date first"
+                              : slotsLoading
+                              ? "Checking availability..."
+                              : t.bookingFormTimePlaceholder}
+                          </option>
+                          {(slotsReady && slots.length > 0 ? slots : TIME_SLOTS.map((time) => ({ time, available: true, past: false, full: false }) as SlotInfo))
+                            .map((s) => (
+                              <option key={s.time} value={s.time} disabled={slotsReady && !s.available}>
+                                {s.time}
+                                {slotsReady && s.full ? " — Booked" : slotsReady && s.past ? " — Passed" : ""}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      {errors.time && <p className="text-xs text-rose-600 mt-1">{errors.time.message}</p>}
+                      {noSlotsFree && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          No slots left for this doctor on this date. Please pick another date.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Visit Reason (required) + Symptoms (optional) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-brand-ink mb-2">
+                        {t.bookingFormVisitReason}
+                      </label>
+                      <div className="relative">
+                        <Stethoscope className="absolute left-4 top-3.5 w-5 h-5 text-brand-muted/70" />
+                        <select
+                          {...register("visitReason")}
                           className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-border focus:border-teal focus:outline-none transition-colors text-sm text-brand-ink appearance-none bg-white"
                         >
-                          <option value="">{t.bookingFormTimePlaceholder}</option>
-                          {timeSlots.map((slot) => (
-                            <option key={slot} value={slot}>
-                              {slot}
+                          <option value="">{t.bookingFormVisitReasonPlaceholder}</option>
+                          {VISIT_REASONS.map((reason) => (
+                            <option key={reason} value={reason}>
+                              {reason}
                             </option>
                           ))}
                         </select>
                       </div>
-                      {errors.time && <p className="text-xs text-rose-600 mt-1">{errors.time.message}</p>}
+                      {errors.visitReason && <p className="text-xs text-rose-600 mt-1">{errors.visitReason.message}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-brand-ink mb-2">
+                        {t.bookingFormSymptoms}
+                      </label>
+                      <div className="relative">
+                        <ClipboardList className="absolute left-4 top-3.5 w-5 h-5 text-brand-muted/70" />
+                        <input
+                          type="text"
+                          placeholder="..."
+                          {...register("symptoms")}
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-border focus:border-teal focus:outline-none transition-colors text-sm text-brand-ink"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Notes (optional) */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-brand-ink mb-2">
+                      {t.bookingFormNotes}
+                    </label>
+                    <div className="relative">
+                      <MessageSquare className="absolute left-4 top-3.5 w-5 h-5 text-brand-muted/70" />
+                      <textarea
+                        rows={2}
+                        placeholder="..."
+                        {...register("additionalNotes")}
+                        className="w-full pl-12 pr-4 py-3 rounded-xl border border-brand-border focus:border-teal focus:outline-none transition-colors text-sm text-brand-ink"
+                      />
                     </div>
                   </div>
 

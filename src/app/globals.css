@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --teal-primary: 18 +178 +166; /* #12B2A6 */
-  --teal-dark: 12 +141 +132;   /* #0C8D84 */
-  --teal-tint: 231 +246 +244;   /* #E7F6F4 */
-  --pink-cta: 232 +75 +140;     /* #E84B8C */
-  --pink-safe: 201 +54 +122;    /* #C9367A */
-  --blush: 252 +239 +244;       /* #FCEFF4 */
-  --cream: 255 +252 +239;       /* #FFFCEF */
-  --ink: 32 +38 +46;            /* #20262E */
-  --muted: 91 +100 +112;        /* #5B6470 */
-  --border: 240 +236 +239;      /* #F0ECEF */
+  /* Space-separated RGB triplets for use as rgb(var(--x)) / rgb(var(--x) / a). */
+  --teal-primary: 18 178 166;  /* #12B2A6 */
+  --teal-dark: 12 141 132;     /* #0C8D84 */
+  --teal-tint: 231 246 244;    /* #E7F6F4 */
+  --pink-cta: 232 75 140;      /* #E84B8C */
+  --pink-safe: 201 54 122;     /* #C9367A */
+  --blush: 252 239 244;        /* #FCEFF4 */
+  --cream: 255 252 239;        /* #FFFCEF */
+  --ink: 32 38 46;             /* #20262E */
+  --muted: 91 100 112;         /* #5B6470 */
+  --border: 240 236 239;       /* #F0ECEF */
 }
 
 @layer base {

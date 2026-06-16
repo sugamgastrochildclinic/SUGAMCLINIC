@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const BlogPostSchema = new Schema(
   {
@@ -14,4 +14,4 @@ const BlogPostSchema = new Schema(
 
 BlogPostSchema.index({ createdAt: -1 });
 
-export default models.BlogPost || model("BlogPost", BlogPostSchema);
+export default mongoose.models.BlogPost || mongoose.model("BlogPost", BlogPostSchema);
