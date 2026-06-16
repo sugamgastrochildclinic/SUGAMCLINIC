@@ -136,12 +136,27 @@ export default async function RootLayout({
         <Script id="google-translate-init" strategy="lazyOnload">
           {`
             window.googleTranslateElementInit = function() {
-              new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,ta',
-                autoDisplay: false
-              }, 'google_translate_element');
-            }
+              try {
+                if (window.google && window.google.translate && window.google.translate.TranslateElement) {
+                  new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    includedLanguages: 'en,ta',
+                    autoDisplay: false
+                  }, 'google_translate_element');
+                }
+              } catch (e) {
+                // Google Translate is a non-critical enhancement; never let its
+                // init bubble up as an unhandled error.
+              }
+            };
+            // Swallow benign cross-origin "error" events from the third-party
+            // Translate widget so they don't surface as an opaque "[object Event]".
+            window.addEventListener('error', function (ev) {
+              var src = (ev && ev.target && (ev.target.src || ev.target.href)) || '';
+              if (typeof src === 'string' && src.indexOf('translate.google') !== -1) {
+                ev.stopImmediatePropagation();
+              }
+            }, true);
           `}
         </Script>
       </body>
