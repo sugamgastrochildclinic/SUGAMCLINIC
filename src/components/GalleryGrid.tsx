@@ -7,6 +7,7 @@ import { X, ZoomIn, Eye, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { translations, Language } from "@/lib/translations";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface GalleryGridProps {
   gallery: any[];
@@ -33,6 +34,7 @@ export default function GalleryGrid({ gallery, lang }: GalleryGridProps) {
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const trapRef = useFocusTrap<HTMLDivElement>(!!selectedImg);
 
   // Lightbox a11y: close on Esc and lock background scroll while open.
   useEffect(() => {
@@ -166,7 +168,7 @@ export default function GalleryGrid({ gallery, lang }: GalleryGridProps) {
       {/* Lightbox Modal — portaled to body so it escapes the section's
           stacking context and renders above the fixed navbar. */}
       {mounted && selectedImg && createPortal(
-        <div className="fixed inset-0 z-[100] bg-brand-ink/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedImg(null)} role="dialog" aria-modal="true" aria-label="Gallery image viewer">
+        <div ref={trapRef} className="fixed inset-0 z-[100] bg-brand-ink/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedImg(null)} role="dialog" aria-modal="true" aria-label="Gallery image viewer">
           <button
             onClick={() => setSelectedImg(null)}
             className="absolute top-6 right-6 z-[110] bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all active:scale-95 cursor-pointer"

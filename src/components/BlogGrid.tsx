@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { translations, Language } from "@/lib/translations";
 
 import ClientDate from "@/components/ClientDate";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface BlogGridProps {
   posts: any[];
@@ -16,6 +17,7 @@ interface BlogGridProps {
 
 export default function BlogGrid({ posts, lang }: BlogGridProps) {
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(!!selectedPost);
 
   // Modal a11y: close on Esc, lock background scroll while open.
   useEffect(() => {
@@ -163,7 +165,7 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
 
         {/* Article Reader Lightbox */}
         {selectedPost && (
-          <div className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedPost(null)} role="dialog" aria-modal="true" aria-label={selectedPost.title || "Article"}>
+          <div ref={trapRef} className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedPost(null)} role="dialog" aria-modal="true" aria-label={selectedPost.title || "Article"}>
             <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 relative border border-brand-border" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setSelectedPost(null)}

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface ChatbotProps {
   settings: any;
@@ -26,6 +27,7 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
@@ -93,7 +95,7 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
     <>
       {/* Chat Window Panel */}
       {isOpen && (
-        <div role="dialog" aria-modal="false" aria-label="Sugam Assistant chat" className="fixed z-[60] bottom-24 right-6 sm:bottom-6 sm:right-24 w-[calc(100vw-3rem)] max-w-[360px] sm:w-[380px] h-[480px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl border border-brand-border shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+        <div ref={trapRef} role="dialog" aria-modal="false" aria-label="Sugam Assistant chat" className="fixed z-[60] bottom-24 right-6 sm:bottom-6 sm:right-24 w-[calc(100vw-3rem)] max-w-[360px] sm:w-[380px] h-[480px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl border border-brand-border shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
           {/* Header */}
           <div className="bg-teal p-5 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
