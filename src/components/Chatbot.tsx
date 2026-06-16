@@ -25,6 +25,7 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const replyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handleToggle = () => setIsOpen((prev) => !prev);
@@ -32,12 +33,29 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
     return () => window.removeEventListener("toggle-chatbot", handleToggle);
   }, []);
 
+  // Close the chat panel on Esc for keyboard users.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen]);
+
+  // Clear any pending reply timer on unmount so we don't setState after unmount.
+  useEffect(() => {
+    return () => {
+      if (replyTimer.current) clearTimeout(replyTimer.current);
+    };
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, isOpen]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userText = input.trim();
     setMessages((prev) => [...prev, { sender: "user", text: userText }]);
@@ -45,7 +63,7 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
     setLoading(true);
 
     // Simulate AI thinking and response
-    setTimeout(() => {
+    replyTimer.current = setTimeout(() => {
       const lower = userText.toLowerCase();
       let reply = "";
 
@@ -75,7 +93,7 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
     <>
       {/* Chat Window Panel */}
       {isOpen && (
-        <div className="fixed bottom-48 right-6 w-[340px] sm:w-[380px] h-[480px] bg-white rounded-3xl border border-brand-border shadow-2xl z-40 flex flex-col overflow-hidden animate-fadeIn">
+        <div role="dialog" aria-modal="false" aria-label="Sugam Assistant chat" className="fixed z-[60] bottom-24 right-6 sm:bottom-6 sm:right-24 w-[calc(100vw-3rem)] max-w-[360px] sm:w-[380px] h-[480px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl border border-brand-border shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
           {/* Header */}
           <div className="bg-teal p-5 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -87,7 +105,7 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
                 <p className="text-[10px] text-teal-tint font-medium">Online | AI Inquiry Agent</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
+            <button onClick={() => setIsOpen(false)} aria-label="Close chat" className="text-white/80 hover:text-white">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -140,7 +158,9 @@ export default function Chatbot({ settings, doctors }: ChatbotProps) {
             />
             <button
               onClick={handleSend}
-              className="bg-teal hover:bg-teal-dark text-white p-2.5 rounded-xl transition-colors shadow-sm active:scale-95 shrink-0"
+              disabled={loading}
+              aria-label="Send message"
+              className="bg-teal hover:bg-teal-dark text-white p-2.5 rounded-xl transition-colors shadow-sm active:scale-95 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4" />
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, ZoomIn, Eye, X } from "lucide-react";
 import Link from "next/link";
 
@@ -11,6 +12,23 @@ interface AllGalleryViewProps {
 export default function AllGalleryView({ gallery }: AllGalleryViewProps) {
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Lightbox a11y: close on Esc, lock background scroll while open.
+  useEffect(() => {
+    if (!selectedImg) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedImg(null);
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedImg]);
 
   const categories = [
     { key: "all", label: "All Photos" },
@@ -109,23 +127,25 @@ export default function AllGalleryView({ gallery }: AllGalleryViewProps) {
         </div>
       )}
 
-      {/* Lightbox Modal */}
-      {selectedImg && (
-        <div className="fixed inset-0 z-50 bg-brand-ink/90 backdrop-blur-md flex items-center justify-center p-4">
+      {/* Lightbox Modal — portaled to body so it renders above the fixed navbar. */}
+      {mounted && selectedImg && createPortal(
+        <div className="fixed inset-0 z-[100] bg-brand-ink/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedImg(null)} role="dialog" aria-modal="true" aria-label="Gallery image viewer">
           <button
             onClick={() => setSelectedImg(null)}
-            className="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all active:scale-95 cursor-pointer"
+            className="absolute top-6 right-6 z-[110] bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all active:scale-95 cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-6 h-6" />
           </button>
-          <div className="relative w-full max-w-4xl max-h-[85vh] aspect-video rounded-3xl overflow-hidden flex items-center justify-center">
+          <div className="relative w-full max-w-4xl max-h-[85vh] aspect-video rounded-3xl overflow-hidden flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <img
               src={selectedImg}
               alt="Clinic Lightbox View"
               className="object-contain max-w-full max-h-[85vh] rounded-2xl"
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

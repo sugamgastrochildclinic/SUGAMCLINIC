@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, Calendar, User, Tag, ArrowUpRight, X } from "lucide-react";
@@ -16,6 +16,21 @@ interface BlogGridProps {
 
 export default function BlogGrid({ posts, lang }: BlogGridProps) {
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+
+  // Modal a11y: close on Esc, lock background scroll while open.
+  useEffect(() => {
+    if (!selectedPost) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedPost(null);
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [selectedPost]);
 
   const t = translations[lang];
 
@@ -148,8 +163,8 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
 
         {/* Article Reader Lightbox */}
         {selectedPost && (
-          <div className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 relative border border-brand-border">
+          <div className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelectedPost(null)} role="dialog" aria-modal="true" aria-label={selectedPost.title || "Article"}>
+            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 relative border border-brand-border" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setSelectedPost(null)}
                 className="absolute top-6 right-6 p-2 rounded-full border border-brand-border hover:bg-brand-blush text-brand-ink transition-all active:scale-95"
