@@ -8,11 +8,11 @@ const path = require('path');
 // down. `frame-ancestors 'self'` mirrors X-Frame-Options for modern browsers.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://translate.google.com https://translate.googleapis.com https://www.gstatic.com https://www.google.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://www.gstatic.com https://www.google.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com",
-  "img-src 'self' data: blob: https://ik.imagekit.io https://www.google.com https://www.gstatic.com https://translate.googleapis.com https://*.gstatic.com",
+  "img-src 'self' data: blob: https://ik.imagekit.io https://www.google.com https://www.gstatic.com https://translate.googleapis.com https://translate-pa.googleapis.com https://*.gstatic.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' https://ik.imagekit.io https://translate.googleapis.com https://translate.google.com",
+  "connect-src 'self' https://ik.imagekit.io https://translate.googleapis.com https://translate-pa.googleapis.com https://translate.google.com",
   "frame-src 'self' https://www.google.com https://translate.google.com",
   "frame-ancestors 'self'",
   "base-uri 'self'",

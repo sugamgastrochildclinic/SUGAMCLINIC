@@ -41,7 +41,7 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
     const transCookie = getCookie("googtrans");
     if (transCookie) {
       const code = transCookie.split("/").pop();
-      if (code && ["en", "ta", "ml", "kn", "te", "hi"].includes(code)) {
+      if (code && ["en", "ta"].includes(code)) {
         setActiveLang(code as Language);
       }
     }
@@ -103,10 +103,6 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
   const languages = [
     { code: "en", label: "English" },
     { code: "ta", label: "தமிழ்" },
-    { code: "ml", label: "മലയാളം" },
-    { code: "kn", label: "ಕನ್ನಡ" },
-    { code: "te", label: "తెలుగు" },
-    { code: "hi", label: "हिन्दी" },
   ];
 
   const clinicName = settings?.clinicName || "Sugam Clinic";

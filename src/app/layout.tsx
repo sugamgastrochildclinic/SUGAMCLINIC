@@ -138,7 +138,7 @@ export default async function RootLayout({
             window.googleTranslateElementInit = function() {
               new google.translate.TranslateElement({
                 pageLanguage: 'en',
-                includedLanguages: 'en,ta,ml,kn,te,hi',
+                includedLanguages: 'en,ta',
                 autoDisplay: false
               }, 'google_translate_element');
             }
