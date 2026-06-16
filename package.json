@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "admin:reset": "node scripts/reset-admin.mjs",
     "migrate:patients": "node scripts/migrate-patients.mjs",
     "migrate:patients:rollback": "node scripts/migrate-patients.mjs --rollback",
     "test": "vitest run",
