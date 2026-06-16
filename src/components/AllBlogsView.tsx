@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ArrowLeft, BookOpen, Calendar, User, Tag, ArrowUpRight, X, Search } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +17,8 @@ export default function AllBlogsView({ posts }: AllBlogsViewProps) {
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const trapRef = useFocusTrap<HTMLDivElement>(!!selectedPost);
 
   // Modal a11y: close on Esc, lock background scroll while open.
@@ -164,7 +167,9 @@ export default function AllBlogsView({ posts }: AllBlogsViewProps) {
         </div>
       )}
 
-      {/* Article Reader Lightbox */}
+      {/* Article Reader Lightbox — portaled to body so the fixed navbar never
+          clips its top regardless of ancestor stacking/transform context. */}
+      {mounted && createPortal(
       <AnimatePresence>
       {selectedPost && (
         <motion.div
@@ -232,7 +237,9 @@ export default function AllBlogsView({ posts }: AllBlogsViewProps) {
           </motion.div>
         </motion.div>
       )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
     </div>
   );
 }

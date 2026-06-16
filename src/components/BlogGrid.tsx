@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, Calendar, User, Tag, ArrowUpRight, X } from "lucide-react";
@@ -17,6 +18,8 @@ interface BlogGridProps {
 
 export default function BlogGrid({ posts, lang }: BlogGridProps) {
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const trapRef = useFocusTrap<HTMLDivElement>(!!selectedPost);
 
   // Modal a11y: close on Esc, lock background scroll while open.
@@ -163,7 +166,10 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
           </div>
         )}
 
-        {/* Article Reader Lightbox */}
+        {/* Article Reader Lightbox — portaled to body so it escapes any
+            transformed ancestor (framer whileInView) and renders above the
+            fixed navbar instead of being clipped under it. */}
+        {mounted && createPortal(
         <AnimatePresence>
         {selectedPost && (
           <motion.div
@@ -238,7 +244,9 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
             </motion.div>
           </motion.div>
         )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+        )}
 
       </div>
     </section>
