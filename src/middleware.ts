@@ -19,8 +19,20 @@ import { getToken } from "next-auth/jwt";
 const ADMIN_PAGE_PREFIX = "/admin";
 const ADMIN_API_PREFIXES = ["/api/admin", "/api/setup"];
 
+// Public-by-design admin API endpoints — the password-recovery flow MUST be
+// reachable while logged out (that's its whole purpose). These self-protect:
+// request-otp only accepts the configured admin email and is rate-limited;
+// reset requires a valid one-time code. They must NOT sit behind the admin
+// token gate, or recovery is impossible.
+const PUBLIC_API_PREFIXES = ["/api/admin/password"];
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Let the self-protecting recovery endpoints through untouched.
+  if (PUBLIC_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
 
   const token = await getToken({
     req,
