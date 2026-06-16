@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     // Per-IP flood guard before any DB work.
     const ip = getClientIp(req);
-    const ipLimit = rateLimit(`contact:ip:${ip}`, 5, 10 * 60 * 1000); // 5 / 10 min
+    const ipLimit = await rateLimit(`contact:ip:${ip}`, 5, 10 * 60 * 1000); // 5 / 10 min
     if (!ipLimit.ok) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment and try again." },
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const data = parsed.data;
 
     // Per-phone guard: limit repeat submissions from one number.
-    const phoneLimit = rateLimit(`contact:phone:${normalizePhone(data.phone)}`, 4, 60 * 60 * 1000); // 4 / hr
+    const phoneLimit = await rateLimit(`contact:phone:${normalizePhone(data.phone)}`, 4, 60 * 60 * 1000); // 4 / hr
     if (!phoneLimit.ok) {
       return NextResponse.json(
         { error: "You've sent several messages recently. Please wait a little before sending more." },

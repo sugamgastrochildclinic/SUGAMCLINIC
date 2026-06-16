@@ -1,31 +1,35 @@
-// Lightweight in-memory rate limiter + bot honeypot for the public POST
-// endpoints (appointment booking, contact form). No external dependency.
+// Rate limiter + bot honeypot for public POST endpoints (reviews, contact,
+// appointments, availability) and the admin login flow.
 //
-// Serverless caveat: this lives in a single lambda instance's memory, so under
-// heavy horizontal scale a flood could spread across instances and partially
-// evade it. For a small clinic it blunts the common case (one bot/IP hammering)
-// effectively. For hard guarantees behind many instances, back this with a
-// shared store (e.g. Upstash Redis) — the call sites would not change.
+// Backing store:
+//   - Production / horizontal scale: Upstash Redis sliding-window limiter
+//     (shared across every Vercel lambda instance), enabled automatically when
+//     UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set.
+//   - Local dev / tests / unconfigured: in-memory sliding window fallback so
+//     the app and tests run with no external dependency.
+//
+// `rateLimit()` is async (Redis is a network call). All call sites await it.
 
-type Timestamps = number[];
-const store = new Map<string, Timestamps>();
-let lastSweep = Date.now();
-const SWEEP_INTERVAL = 5 * 60 * 1000; // 5 min
-const MAX_RETENTION = 60 * 60 * 1000; // drop keys idle for 1h
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 export interface RateLimitResult {
   ok: boolean;
   retryAfterSec: number;
 }
 
-/**
- * Sliding-window limiter. Allows `limit` hits per `windowMs` for a given key.
- * Call once per request; it records the hit when allowed.
- */
-export function rateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+// ---------------------------------------------------------------------------
+// In-memory fallback (single-instance only).
+// ---------------------------------------------------------------------------
+type Timestamps = number[];
+const store = new Map<string, Timestamps>();
+let lastSweep = Date.now();
+const SWEEP_INTERVAL = 5 * 60 * 1000;
+const MAX_RETENTION = 60 * 60 * 1000;
+
+function memoryRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
   const now = Date.now();
 
-  // Periodic memory sweep so the map can't grow unbounded.
   if (now - lastSweep > SWEEP_INTERVAL) {
     for (const [k, arr] of store) {
       const fresh = arr.filter((t) => now - t < MAX_RETENTION);
@@ -48,16 +52,87 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateLim
   return { ok: true, retryAfterSec: 0 };
 }
 
+// ---------------------------------------------------------------------------
+// Upstash Redis sliding-window limiter (shared across instances).
+// ---------------------------------------------------------------------------
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+/** True when the distributed limiter is configured. Exported for tests/diagnostics. */
+export const isDistributedRateLimitEnabled = !!(UPSTASH_URL && UPSTASH_TOKEN);
+
+// In production the in-memory fallback is per-lambda and easily evaded under
+// horizontal scale — warn loudly if the distributed store isn't configured.
+if (process.env.NODE_ENV === "production" && !isDistributedRateLimitEnabled) {
+  console.warn(
+    "[rateLimit] UPSTASH_REDIS_REST_URL/TOKEN not set — falling back to per-instance " +
+      "in-memory rate limiting. Set them in the Vercel environment for effective limits."
+  );
+}
+
+let redis: Redis | null = null;
+// One Ratelimit instance per (limit, windowMs) pair — `Ratelimit` is configured
+// with a fixed limiter, so we memoise by the limit signature.
+const limiterCache = new Map<string, Ratelimit>();
+
+function getRedis(): Redis {
+  if (!redis) {
+    redis = new Redis({ url: UPSTASH_URL!, token: UPSTASH_TOKEN! });
+  }
+  return redis;
+}
+
+function getLimiter(limit: number, windowMs: number): Ratelimit {
+  const sig = `${limit}:${windowMs}`;
+  let rl = limiterCache.get(sig);
+  if (!rl) {
+    rl = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(limit, `${windowMs} ms`),
+      prefix: "rl",
+      analytics: false,
+    });
+    limiterCache.set(sig, rl);
+  }
+  return rl;
+}
+
 /**
- * Best-effort client IP from proxy headers.
- *
- * Order matters for trust: `x-vercel-forwarded-for` is set by Vercel's edge and
- * cannot be spoofed by the client, so it's preferred. `x-real-ip` (also set by
- * the platform) is next. Only as a last resort do we read the leftmost entry of
- * the client-controllable `x-forwarded-for` — taking the *first* hop, since on
- * a trusted single-proxy deployment that is the real client; never trust the
- * whole header blindly. Returns "unknown" so a missing IP still yields a stable
- * (shared) rate-limit bucket rather than throwing.
+ * Sliding-window limiter. Allows `limit` hits per `windowMs` for a given key.
+ * Records the hit when allowed. Uses Upstash Redis when configured, otherwise
+ * an in-memory fallback. Never throws — a Redis outage degrades to "allow"
+ * (fail-open) so the limiter can't take the whole site down, while still
+ * being effective in the normal case.
+ */
+export async function rateLimit(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
+  if (!isDistributedRateLimitEnabled) {
+    return memoryRateLimit(key, limit, windowMs);
+  }
+
+  try {
+    const res = await getLimiter(limit, windowMs).limit(key);
+    if (res.success) {
+      return { ok: true, retryAfterSec: 0 };
+    }
+    const retryAfterSec = Math.max(1, Math.ceil((res.reset - Date.now()) / 1000));
+    return { ok: false, retryAfterSec };
+  } catch (err) {
+    // Redis unreachable → fail open but log. Better to serve traffic than to
+    // hard-fail every public POST on a transient Redis blip.
+    console.error("Distributed rate limiter error (failing open):", err);
+    return { ok: true, retryAfterSec: 0 };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers (unchanged API).
+// ---------------------------------------------------------------------------
+
+/**
+ * Best-effort client IP. Prefers platform-set, unspoofable headers
+ * (`x-vercel-forwarded-for`, `x-real-ip`) over the client-controllable
+ * `x-forwarded-for`. Returns "unknown" so a missing IP still yields a stable
+ * bucket rather than throwing.
  */
 export function getClientIp(req: Request): string {
   const vercel = req.headers.get("x-vercel-forwarded-for");

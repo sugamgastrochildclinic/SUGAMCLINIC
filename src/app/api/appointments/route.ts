@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     // Per-IP flood guard (cheap, before any DB work).
     const ip = getClientIp(req);
-    const ipLimit = rateLimit(`appt:ip:${ip}`, 5, 10 * 60 * 1000); // 5 / 10 min
+    const ipLimit = await rateLimit(`appt:ip:${ip}`, 5, 10 * 60 * 1000); // 5 / 10 min
     if (!ipLimit.ok) {
       return NextResponse.json(
         { error: "Too many requests. Please wait a moment and try again." },
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     const data = parsed.data;
 
     // Per-phone guard: stops one number spamming bookings even across IPs.
-    const phoneLimit = rateLimit(`appt:phone:${normalizePhone(data.phone)}`, 3, 60 * 60 * 1000); // 3 / hr
+    const phoneLimit = await rateLimit(`appt:phone:${normalizePhone(data.phone)}`, 3, 60 * 60 * 1000); // 3 / hr
     if (!phoneLimit.ok) {
       return NextResponse.json(
         { error: "You've made several booking requests recently. Please call the clinic or try again later." },

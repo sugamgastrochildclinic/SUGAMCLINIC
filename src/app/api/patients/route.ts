@@ -1,20 +1,31 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import Patient from "@/models/Patient";
 import Appointment from "@/models/Appointment";
 import { normalizePhone } from "@/lib/rateLimit";
 import { requireAdmin } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/api/errors";
+import { parsePagination } from "@/lib/api/validation";
 
 // Admin-only patient directory. Returns every patient enriched with the latest
 // visit reason they actually entered on the booking form, so the list can
 // display and search on it without N round-trips.
-export async function GET() {
+//
+// Pagination is opt-in (?page/?limit): without params the full directory is
+// returned (existing admin UI relies on client-side search over the whole set);
+// with params the patient set is bounded to cap payload/memory on large data.
+export async function GET(req: NextRequest) {
   try {
     await requireAdmin();
     await connectToDatabase();
 
-    const patients: any[] = await Patient.find().sort({ updatedAt: -1 }).lean();
+    const { searchParams } = new URL(req.url);
+    const paginate = searchParams.has("page") || searchParams.has("limit");
+    const { limit, skip } = parsePagination(searchParams, 100, 500);
+
+    let pq = Patient.find().sort({ updatedAt: -1 });
+    if (paginate) pq = pq.skip(skip).limit(limit);
+    const patients: any[] = await pq.lean();
 
     // Index patients by both their id and their normalised phone, so an
     // appointment matches its patient whether or not it carries the `patient`

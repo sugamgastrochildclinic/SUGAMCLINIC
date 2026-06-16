@@ -7,6 +7,7 @@ import { requireAdmin, getAdminSession } from "@/lib/api/auth";
 import { handleApiError, NotFound } from "@/lib/api/errors";
 import { assertValidObjectId, parseBody } from "@/lib/api/validation";
 import { reviewUpdateSchema } from "@/lib/api/schemas";
+import { rateLimit, getClientIp, isHoneypotTripped } from "@/lib/rateLimit";
 
 const reviewSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -30,8 +31,24 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    await connectToDatabase();
     const raw = await req.json();
+
+    // Bot honeypot: silently accept and drop (matches contact/appointments).
+    if (isHoneypotTripped(raw)) {
+      return NextResponse.json({ success: true });
+    }
+
+    // Per-IP flood guard before any DB work.
+    const ip = getClientIp(req);
+    const ipLimit = await rateLimit(`review:ip:${ip}`, 5, 10 * 60 * 1000); // 5 / 10 min
+    if (!ipLimit.ok) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a moment and try again." },
+        { status: 429, headers: { "Retry-After": String(ipLimit.retryAfterSec) } }
+      );
+    }
+
+    await connectToDatabase();
     const data = parseBody(reviewSchema, raw);
 
     const isAdmin = !!(await getAdminSession());

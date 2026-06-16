@@ -5,22 +5,26 @@ import { sendEmail } from "@/lib/email";
 import { renderEmail, quoteBlock, esc, nl2br } from "@/lib/emailTemplate";
 import { requireAdmin } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/api/errors";
-import { assertValidObjectId } from "@/lib/api/validation";
+import { assertValidObjectId, parseBody } from "@/lib/api/validation";
+import { z } from "zod";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const replySchema = z.object({
+  subject: z.string().trim().max(200).optional().default(""),
+  message: z.string().trim().min(1).max(5000),
+});
 
 export async function POST(req: NextRequest) {
   try {
     const session = await requireAdmin();
 
     await connectToDatabase();
-    const { id, subject, message } = await req.json();
+    const { id, ...rest } = await req.json();
 
     // --- Validation ---
     assertValidObjectId(id, "message id");
-    if (!message || !message.trim()) {
-      return NextResponse.json({ error: "Reply message is required" }, { status: 400 });
-    }
+    const { subject, message } = parseBody(replySchema, rest);
 
     const msg = await ContactMessage.findById(id);
     if (!msg) {

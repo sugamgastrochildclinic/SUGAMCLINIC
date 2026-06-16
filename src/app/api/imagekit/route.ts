@@ -10,16 +10,11 @@ const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif", "ima
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB decoded
 const DATA_URL_RE = /^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/;
 
-export async function GET() {
-  try {
-    await requireAdmin();
-    const ik = getImageKitInstance();
-    const authParams = ik.getAuthenticationParameters();
-    return NextResponse.json(authParams);
-  } catch (error) {
-    return handleApiError(error, "GET /api/imagekit");
-  }
-}
+// NOTE: the client-side ImageKit auth-params GET handler was removed. All uploads
+// go through the validated POST below (MIME allowlist, size cap, sanitized name,
+// fixed server-controlled folder). Exposing getAuthenticationParameters() would
+// let any admin-session holder upload arbitrary types/sizes directly to the CDN,
+// bypassing this server-side validation — so it is intentionally not offered.
 
 /**
  * Upload an image to ImageKit and return its CDN URL.
