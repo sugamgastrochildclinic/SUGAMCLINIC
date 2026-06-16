@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Save, Loader2, Settings, ShieldAlert, Globe, Info } from "lucide-react";
+import { Save, Loader2, Settings, ShieldAlert, Globe, Info, Share2 } from "lucide-react";
 import ImageUploader from "@/components/ImageUploader";
 
 import { useAdminData } from "@/components/AdminDataProvider";
@@ -238,6 +238,67 @@ export default function AdminSettingsPage() {
               onChange={handleChange}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
             />
+          </div>
+        </div>
+
+        {/* Social Media Links */}
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div className="border-b border-slate-100 pb-4">
+            <h2 className="font-heading font-bold text-lg text-slate-800 flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-teal" />
+              <span>Social Media Links</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Paste the full profile URL (e.g. https://facebook.com/yourclinic). Leave a field
+              blank to hide that icon — empty links are not shown in the website footer.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Facebook URL</label>
+              <input
+                type="url"
+                name="facebook"
+                value={settings.facebook || ""}
+                onChange={handleChange}
+                placeholder="https://facebook.com/yourclinic"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">Instagram URL</label>
+              <input
+                type="url"
+                name="instagram"
+                value={settings.instagram || ""}
+                onChange={handleChange}
+                placeholder="https://instagram.com/yourclinic"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">YouTube URL</label>
+              <input
+                type="url"
+                name="youtube"
+                value={settings.youtube || ""}
+                onChange={handleChange}
+                placeholder="https://youtube.com/@yourclinic"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">LinkedIn URL</label>
+              <input
+                type="url"
+                name="linkedin"
+                value={settings.linkedin || ""}
+                onChange={handleChange}
+                placeholder="https://linkedin.com/company/yourclinic"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-teal text-sm text-slate-800"
+              />
+            </div>
           </div>
         </div>
 
