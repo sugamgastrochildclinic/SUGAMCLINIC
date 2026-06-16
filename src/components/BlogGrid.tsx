@@ -168,7 +168,7 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
         {selectedPost && (
           <motion.div
             ref={trapRef}
-            className="fixed inset-0 z-50 bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
             onClick={() => setSelectedPost(null)}
             role="dialog"
             aria-modal="true"
@@ -179,7 +179,7 @@ export default function BlogGrid({ posts, lang }: BlogGridProps) {
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <motion.div
-              className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 relative border border-brand-border"
+              className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative border border-brand-border"
               onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
