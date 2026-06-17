@@ -8,7 +8,7 @@
 
 const CLINIC_NAME = "Sugam Child & Gastro Care Clinic";
 const CLINIC_TAGLINE = "Premium Pediatric, Neonatal & Gastroenterology Care";
-const CLINIC_PHONE = process.env.ADMIN_PHONE || "+91 94432 12345";
+const CLINIC_PHONE = process.env.ADMIN_PHONE || "+91 73582 93645";
 const CLINIC_EMAIL = process.env.EMAIL_FROM || "contact@sugamclinic.com";
 
 // Brand palette (kept in sync with the site / tailwind config).
