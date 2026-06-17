@@ -104,7 +104,10 @@ const getLayoutSettings = unstable_cache(
     }
   },
   ["public-layout-settings"],
-  { revalidate: 300 }
+  // Tagged so an admin settings save can bust this immediately via
+  // revalidateTag(); without the tag, revalidatePath() leaves this
+  // unstable_cache entry stale (footer/navbar show old info until the 300s TTL).
+  { revalidate: 300, tags: ["public-layout-settings"] }
 );
 
 export default async function RootLayout({

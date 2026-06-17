@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
  * Bust the ISR cache for every public, content-driven page after an admin
@@ -14,4 +14,9 @@ export function revalidatePublic() {
   revalidatePath("/services");
   revalidatePath("/gallery");
   revalidatePath("/blogs");
+  // The shared layout (footer/navbar clinic info) reads settings through an
+  // unstable_cache tagged "public-layout-settings". revalidatePath alone does
+  // NOT clear that entry, so the footer would keep showing stale address/phone/
+  // email/hours until the 300s TTL. Bust the tag too.
+  revalidateTag("public-layout-settings");
 }
