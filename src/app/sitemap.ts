@@ -24,7 +24,7 @@ async function latestUpdate(model: any, filter: Record<string, any> = {}) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Public origin — NOT NEXTAUTH_URL (an auth var). Set NEXT_PUBLIC_SITE_URL to
   // the real domain in production so emitted URLs aren't localhost.
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://sugamgastrochildclinic.com";
 
   // Defaults so the sitemap still builds if the DB is unreachable.
   let servicesUpdated = new Date();
@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${base}/services`,
       lastModified: servicesUpdated,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: `${base}/gallery`,

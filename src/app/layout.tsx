@@ -21,7 +21,7 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["400", "500", "600", "700"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sugamgastrochildclinic.com";
 const siteTitle = "Sugam Child & Gastro Care Clinic";
 // Homepage <title> — leads with the top commercial + local keywords so the
 // city query ("pediatrician in Coimbatore") matches the title tag.

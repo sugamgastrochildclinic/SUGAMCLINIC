@@ -35,7 +35,7 @@ const ALLOWED_BOTS = [
 ];
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://sugamgastrochildclinic.com";
   const disallow = ["/admin", "/api/", "/login", "/reset-password"];
 
   return {
