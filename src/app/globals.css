@@ -100,27 +100,6 @@
   animation: marquee 20s linear infinite reverse;
 }
 
-/* Hide Google Translate top bar & frame overlays */
-iframe.goog-te-banner-frame,
-.goog-te-banner-frame,
-.goog-te-banner,
-.skiptranslate,
-#goog-gt-tt,
-.goog-te-balloon-frame {
-  display: none !important;
-  visibility: hidden !important;
-}
-
-body {
-  top: 0px !important;
-  position: static !important;
-}
-
-.goog-text-highlight {
-  background-color: transparent !important;
-  box-shadow: none !important;
-}
-
 /* Scroll margin offset for desktop view sections */
 @media (min-width: 1024px) {
   section {

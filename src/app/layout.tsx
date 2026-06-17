@@ -4,7 +4,6 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import PublicLayoutWrapper from "@/components/PublicLayoutWrapper";
 
-import TranslateLoader from "@/components/TranslateLoader";
 import { unstable_cache } from "next/cache";
 import { connectToDatabase } from "@/lib/db";
 import ClinicSettings from "@/models/ClinicSettings";
@@ -128,11 +127,6 @@ export default async function RootLayout({
             {children}
           </PublicLayoutWrapper>
         </Providers>
-        <div id="google_translate_element" className="hidden" />
-        {/* Loads the ~120 KB Google Translate widget only when a non-English
-            translation is active — English (default + LCP path) ships zero
-            translate JS. */}
-        <TranslateLoader />
       </body>
     </html>
   );

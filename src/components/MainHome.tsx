@@ -39,59 +39,23 @@ export default function MainHome({
 }: MainHomeProps) {
   const [lang, setLang] = useState<Language>("en");
 
+  // Restore the visitor's saved UI language (in-app translations, no third party).
   React.useEffect(() => {
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(";").shift();
-      return null;
-    };
-    const transCookie = getCookie("googtrans");
-    if (transCookie) {
-      const code = transCookie.split("/").pop();
-      if (code && ["en", "ta", "ml", "kn", "te", "hi"].includes(code)) {
-        setLang(code as Language);
-      }
+    const saved = localStorage.getItem("site-lang");
+    if (saved === "en" || saved === "ta") {
+      setLang(saved);
     }
   }, []);
 
+  // Pure client-side language switch — swaps the in-app translation strings via
+  // React state. No page reload, no external translation service.
   const handleLangChange = (newLang: Language) => {
     setLang(newLang);
-    
-    // Clear existing googtrans cookies on all potential domains
-    const domains = [
-      window.location.hostname,
-      '.' + window.location.hostname,
-      window.location.hostname.replace(/^www\./, ''),
-      '.' + window.location.hostname.replace(/^www\./, '')
-    ];
-    
-    domains.forEach(d => {
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${d};`;
-    });
-
-    // Set new cookie
-    document.cookie = `googtrans=/en/${newLang}; path=/;`;
-    document.cookie = `googtrans=/en/${newLang}; path=/; domain=${window.location.hostname};`;
-    document.cookie = `googtrans=/en/${newLang}; path=/; domain=.${window.location.hostname.replace(/^www\./, '')};`;
-    
-    if (window.location.hostname === 'localhost') {
-      document.cookie = `googtrans=/en/${newLang}; path=/;`;
-    }
-
-    // Programmatically trigger Google Translate combo change if present
     try {
-      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (combo) {
-        combo.value = newLang;
-        combo.dispatchEvent(new Event('change'));
-      }
-    } catch (e) {
-      console.error(e);
+      localStorage.setItem("site-lang", newLang);
+    } catch {
+      // ignore storage failures (private mode etc.)
     }
-
-    window.location.reload();
   };
 
   return (
