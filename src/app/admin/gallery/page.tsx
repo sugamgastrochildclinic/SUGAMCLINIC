@@ -5,6 +5,7 @@ import { Plus, Trash2, Loader2, Image as ImageIcon, Upload, Copy, Check, X } fro
 
 import { useAdminData } from "@/components/AdminDataProvider";
 import { useAdminFeedback } from "@/components/AdminFeedback";
+import ImageUploader from "@/components/ImageUploader";
 
 export default function AdminGalleryPage() {
   const { confirm, notify } = useAdminFeedback();
@@ -17,7 +18,7 @@ export default function AdminGalleryPage() {
   // Form State
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("gallery");
-  const [fileInput, setFileInput] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     if (contextGallery && contextGallery.length > 0) {
@@ -29,49 +30,34 @@ export default function AdminGalleryPage() {
     }
   }, [contextGallery, contextLoading]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFileInput(e.target.files[0]);
-    }
-  };
-
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fileInput) return;
+    if (!imageUrl) return;
 
     setUploading(true);
 
     try {
-      // Intelligent local fallback: convert image to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(fileInput);
-      reader.onloadend = async () => {
-        const base64Data = reader.result as string;
+      // Post ImageKit URL to gallery endpoint
+      const res = await fetch("/api/gallery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl,
+          caption,
+          category,
+        }),
+      });
 
-        // Post base64 data to gallery endpoint
-        const res = await fetch("/api/gallery", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            imageUrl: base64Data,
-            caption,
-            category,
-          }),
-        });
+      if (!res.ok) throw new Error("Upload failed");
+      
+      setCaption("");
+      setImageUrl("");
 
-        if (!res.ok) throw new Error("Upload failed");
-        
-        setCaption("");
-        setFileInput(null);
-        // Reset file input element
-        const fileInputEl = document.getElementById("file-select") as HTMLInputElement;
-        if (fileInputEl) fileInputEl.value = "";
-
-        fetchGallery();
-        setUploading(false);
-      };
+      fetchGallery();
+      setUploading(false);
     } catch (err) {
       console.error(err);
+      notify("error", "Failed to save image to gallery.");
       setUploading(false);
     }
   };
@@ -122,14 +108,10 @@ export default function AdminGalleryPage() {
 
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Select Image File</label>
-              <input
-                id="file-select"
-                type="file"
-                required
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-tint file:text-teal hover:file:bg-teal/20"
+              <ImageUploader
+                value={imageUrl}
+                onChange={setImageUrl}
+                label="Select Image File"
               />
             </div>
 
@@ -162,7 +144,7 @@ export default function AdminGalleryPage() {
 
             <button
               type="submit"
-              disabled={uploading || !fileInput}
+              disabled={uploading || !imageUrl}
               className="w-full bg-teal hover:bg-teal-dark text-white py-3 rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
             >
               {uploading ? (
