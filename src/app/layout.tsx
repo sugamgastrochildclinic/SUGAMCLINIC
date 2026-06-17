@@ -3,6 +3,7 @@ import { Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import PublicLayoutWrapper from "@/components/PublicLayoutWrapper";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { unstable_cache } from "next/cache";
 import { connectToDatabase } from "@/lib/db";
@@ -129,6 +130,7 @@ export default async function RootLayout({
           <PublicLayoutWrapper settings={serializedSettings}>
             {children}
           </PublicLayoutWrapper>
+          <SpeedInsights />
         </Providers>
       </body>
     </html>
