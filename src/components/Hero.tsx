@@ -28,7 +28,8 @@ export default function Hero({ settings, lang }: HeroProps) {
           fill
           priority
           fetchPriority="high"
-          quality={100}
+          sizes="100vw"
+          quality={75}
           className="object-cover object-[80%_center] md:object-center"
         />
       </div>

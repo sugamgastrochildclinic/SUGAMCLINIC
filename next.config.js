@@ -38,11 +38,14 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   poweredByHeader: false,
   compress: true,
+  // Tree-shake large icon/animation/chart libs so only used exports ship.
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'recharts'],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
-    // Quality values actually used across components (Hero=100, blog=76, migrated/gallery=70/72/90).
-    // Next 16 requires whitelisting them; this silences the warning and future-proofs.
-    qualities: [70, 72, 75, 76, 90, 100],
+    // Quality values actually used across components (hero/gallery 75, blog 76, migrated 70/72/90).
+    qualities: [70, 72, 75, 76, 90],
     minimumCacheTTL: 86400,
     remotePatterns: [
       {

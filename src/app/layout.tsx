@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import PublicLayoutWrapper from "@/components/PublicLayoutWrapper";
 
-import Script from "next/script";
+import TranslateLoader from "@/components/TranslateLoader";
 import { unstable_cache } from "next/cache";
 import { connectToDatabase } from "@/lib/db";
 import ClinicSettings from "@/models/ClinicSettings";
@@ -129,36 +129,10 @@ export default async function RootLayout({
           </PublicLayoutWrapper>
         </Providers>
         <div id="google_translate_element" className="hidden" />
-        <Script
-          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          strategy="lazyOnload"
-        />
-        <Script id="google-translate-init" strategy="lazyOnload">
-          {`
-            window.googleTranslateElementInit = function() {
-              try {
-                if (window.google && window.google.translate && window.google.translate.TranslateElement) {
-                  new google.translate.TranslateElement({
-                    pageLanguage: 'en',
-                    includedLanguages: 'en,ta',
-                    autoDisplay: false
-                  }, 'google_translate_element');
-                }
-              } catch (e) {
-                // Google Translate is a non-critical enhancement; never let its
-                // init bubble up as an unhandled error.
-              }
-            };
-            // Swallow benign cross-origin "error" events from the third-party
-            // Translate widget so they don't surface as an opaque "[object Event]".
-            window.addEventListener('error', function (ev) {
-              var src = (ev && ev.target && (ev.target.src || ev.target.href)) || '';
-              if (typeof src === 'string' && src.indexOf('translate.google') !== -1) {
-                ev.stopImmediatePropagation();
-              }
-            }, true);
-          `}
-        </Script>
+        {/* Loads the ~120 KB Google Translate widget only when a non-English
+            translation is active — English (default + LCP path) ships zero
+            translate JS. */}
+        <TranslateLoader />
       </body>
     </html>
   );
