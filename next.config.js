@@ -12,7 +12,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com",
   "img-src 'self' data: blob: https://ik.imagekit.io https://www.google.com https://www.gstatic.com https://translate.googleapis.com https://translate-pa.googleapis.com https://*.gstatic.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' https://ik.imagekit.io https://translate.googleapis.com https://translate-pa.googleapis.com https://translate.google.com",
+  "connect-src 'self' https://ik.imagekit.io https://upload.imagekit.io https://translate.googleapis.com https://translate-pa.googleapis.com https://translate.google.com",
   "frame-src 'self' https://www.google.com https://translate.google.com",
   "frame-ancestors 'self'",
   "base-uri 'self'",

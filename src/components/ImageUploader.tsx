@@ -21,76 +21,100 @@ export default function ImageUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { notify } = useAdminFeedback();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Resize an image File client-side to a max 800px JPEG blob. Keeps uploads
+  // small (binary, not base64) so the direct-to-ImageKit upload is fast.
+  const resizeToBlob = (file: File): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read failed"));
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("decode failed"));
+        img.onload = () => {
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => (blob ? resolve(blob) : reject(new Error("encode failed"))),
+            "image/jpeg",
+            0.82
+          );
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      notify("error", "Please select an image file.");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      notify("error", "Image is too large (max 15 MB).");
+      return;
+    }
+
     setLoading(true);
+    try {
+      const blob = await resizeToBlob(file);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        // Canvas resizing to keep base64 strings compact and fast
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 800;
-        const MAX_HEIGHT = 800;
-        let width = img.width;
-        let height = img.height;
+      // Fetch short-lived upload credentials, then upload the binary blob
+      // DIRECTLY to ImageKit — no relay through our serverless function. We
+      // store the returned CDN URL (NOT base64) so next/image can serve
+      // optimized, responsive AVIF/WebP from the edge.
+      const authRes = await fetch("/api/imagekit/auth");
+      const auth = await authRes.json();
+      if (!authRes.ok || !auth.signature) {
+        throw new Error(auth.error || "Could not authorize upload");
+      }
 
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
+      const form = new FormData();
+      form.append("file", blob, file.name || "upload.jpg");
+      form.append("fileName", file.name || "upload.jpg");
+      form.append("publicKey", auth.publicKey);
+      form.append("signature", auth.signature);
+      form.append("expire", String(auth.expire));
+      form.append("token", auth.token);
+      form.append("folder", "/sugam-clinic");
+      form.append("useUniqueFileName", "true");
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-
-        // Upload to ImageKit and store the returned CDN URL (NOT base64), so
-        // next/image can serve optimized, responsive AVIF/WebP from the edge.
-        (async () => {
-          try {
-            const res = await fetch("/api/imagekit", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                file: dataUrl,
-                fileName: file.name || "upload.jpg",
-              }),
-            });
-            const json = await res.json();
-            if (!res.ok || !json.url) {
-              throw new Error(json.error || "Upload failed");
-            }
-            onChange(json.url);
-          } catch (err) {
-            console.error("Image upload failed:", err);
-            notify("error", "Image upload failed. Please try again.");
-          } finally {
-            setLoading(false);
-          }
-        })();
-      };
-      img.onerror = () => {
-        setLoading(false);
-      };
-    };
-    reader.onerror = () => {
+      const upRes = await fetch(
+        "https://upload.imagekit.io/api/v1/files/upload",
+        { method: "POST", body: form }
+      );
+      const json = await upRes.json();
+      if (!upRes.ok || !json.url) {
+        throw new Error(json?.message || "Upload failed");
+      }
+      onChange(json.url);
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      notify("error", "Image upload failed. Please try again.");
+    } finally {
       setLoading(false);
-    };
+    }
   };
 
   const clearImage = () => {
