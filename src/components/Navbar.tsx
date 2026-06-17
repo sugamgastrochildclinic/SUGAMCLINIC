@@ -4,24 +4,21 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { Menu, X, Globe, Calendar, UserCheck } from "lucide-react";
+import { Menu, X, Calendar, UserCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { translations, Language } from "@/lib/translations";
 
 interface NavbarProps {
   settings: any;
   lang: Language;
-  setLang?: (l: Language) => void;
 }
 
-export default function Navbar({ settings, lang, setLang }: NavbarProps) {
+export default function Navbar({ settings, lang }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeLang, setActiveLang] = useState<Language>(lang);
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const { data: session } = useSession();
 
-  const t = translations[activeLang];
+  const t = translations[lang];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,23 +28,6 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Keep the local label in sync if the parent changes language.
-  useEffect(() => {
-    setActiveLang(lang);
-  }, [lang]);
-
-  // Pure client-side switch — updates in-app translation strings via parent
-  // state and persists the choice. No external translation service.
-  const handleLangChange = (newLang: Language) => {
-    setActiveLang(newLang);
-    try {
-      localStorage.setItem("site-lang", newLang);
-    } catch {
-      // ignore storage failures
-    }
-    if (setLang) setLang(newLang);
-  };
-
   const navLinks = [
     { name: t.navHome, href: "#home" },
     { name: t.navAbout, href: "#about" },
@@ -56,11 +36,6 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
     { name: t.navGallery, href: "#gallery" },
     { name: t.navBlog, href: "#blog" },
     { name: t.navContact, href: "#contact" },
-  ];
-
-  const languages = [
-    { code: "en", label: "English" },
-    { code: "ta", label: "தமிழ்" },
   ];
 
   const clinicName = settings?.clinicName || "Sugam Clinic";
@@ -123,54 +98,8 @@ export default function Navbar({ settings, lang, setLang }: NavbarProps) {
               </Link>
             </div>
 
-            {/* Custom Language Dropdown Selector & CTA Icon */}
+            {/* CTA Icon */}
             <div className="flex items-center gap-3 border-l border-brand-border/60 pl-5">
-              <div className="relative notranslate" translate="no">
-                <button
-                  onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                  aria-label="Select language"
-                  aria-haspopup="menu"
-                  aria-expanded={langDropdownOpen}
-                  className="flex items-center gap-1.5 bg-teal-tint/50 border border-teal/15 px-3 py-1 rounded-full text-teal-dark font-bold text-xs hover:bg-teal-tint transition-all cursor-pointer shadow-sm"
-                >
-                  <Globe className="w-3.5 h-3.5 text-teal shrink-0" />
-                  <span>{languages.find((l) => l.code === activeLang)?.label || "English"}</span>
-                </button>
-
-                <AnimatePresence>
-                  {langDropdownOpen && (
-                    <>
-                      {/* Click outside backdrop */}
-                      <div className="fixed inset-0 z-40" onClick={() => setLangDropdownOpen(false)} />
-                      
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 mt-2 w-40 bg-white/95 dark:bg-[#20262E]/95 backdrop-blur-md border border-brand-border rounded-2xl shadow-xl py-2 z-50 overflow-hidden"
-                      >
-                        {languages.map((l) => (
-                          <button
-                            key={l.code}
-                            onClick={() => {
-                              handleLangChange(l.code as Language);
-                              setLangDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-teal-tint hover:text-teal-dark transition-all flex items-center justify-between cursor-pointer ${
-                              activeLang === l.code ? "text-teal bg-teal-tint/30" : "text-brand-ink"
-                            }`}
-                          >
-                            <span>{l.label}</span>
-                            {activeLang === l.code && <div className="w-1.5 h-1.5 rounded-full bg-teal" />}
-                          </button>
-                        ))}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* Icon-Only Booking Button for Desktop Header */}
               <Link
                 href="#booking"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import dynamic from "next/dynamic";
 import Hero from "@/components/Hero";
 import SectionTicker from "@/components/SectionTicker";
@@ -37,26 +37,8 @@ export default function MainHome({
   blogs,
   gallery,
 }: MainHomeProps) {
-  const [lang, setLang] = useState<Language>("en");
-
-  // Restore the visitor's saved UI language (in-app translations, no third party).
-  React.useEffect(() => {
-    const saved = localStorage.getItem("site-lang");
-    if (saved === "en" || saved === "ta") {
-      setLang(saved);
-    }
-  }, []);
-
-  // Pure client-side language switch — swaps the in-app translation strings via
-  // React state. No page reload, no external translation service.
-  const handleLangChange = (newLang: Language) => {
-    setLang(newLang);
-    try {
-      localStorage.setItem("site-lang", newLang);
-    } catch {
-      // ignore storage failures (private mode etc.)
-    }
-  };
+  // Site is English-only.
+  const lang: Language = "en";
 
   return (
     <>
