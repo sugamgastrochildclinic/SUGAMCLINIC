@@ -28,7 +28,7 @@ const siteTitle = "Sugam Child & Gastro Care Clinic";
 const homeTitle =
   "Pediatrician in Coimbatore | Neonatologist & Pediatric Gastroenterologist | Sugam Clinic";
 const siteDescription =
-  "Sugam Child & Gastro Care Clinic in Coimbatore offers expert pediatric, neonatal and pediatric gastroenterology care. Trusted pediatrician in Coimbatore for newborn care, vaccinations, jaundice, stomach pain, liver disorders and child health consultations. Book an appointment today.";
+  "Sugam Child & Gastro Care Clinic, Venkittapuram, Ambethkar Road, Coimbatore, Tamil Nadu 641025 — expert pediatric, neonatal and pediatric gastroenterology care. Trusted pediatrician in Coimbatore for newborn care, vaccinations, jaundice, stomach pain, liver disorders and child health consultations. Book an appointment today.";
 // Question-led variant — higher click-through on social shares.
 const siteSocialDescription =
   "Looking for a pediatrician in Coimbatore? Sugam Child & Gastro Care Clinic, Venkittapuram provides expert newborn care, child vaccinations, pediatric gastroenterology, jaundice treatment, stomach pain and liver disease care. Book your appointment today.";

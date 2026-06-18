@@ -9,7 +9,7 @@ export const SITE_URL =
 export const SITE_NAME = "Sugam Child & Gastro Care Clinic";
 
 export const SITE_DESCRIPTION =
-  "Sugam Child & Gastro Care Clinic, Venkittapuram, Coimbatore — pediatrician, neonatologist & pediatric gastroenterologist for newborn care, child vaccination, jaundice, stomach pain, and liver disease treatment.";
+  "Sugam Child & Gastro Care Clinic, Venkittapuram, Ambethkar Road, Coimbatore, Tamil Nadu 641025 — pediatrician, neonatologist & pediatric gastroenterologist for newborn care, child vaccination, jaundice, stomach pain, and liver disease treatment.";
 
 export const DEFAULT_OG_IMAGE = "/hero-logo-desktop.jpg";
 
@@ -144,6 +144,7 @@ export function medicalClinicSchema(settings: Settings) {
     address: {
       "@type": "PostalAddress",
       streetAddress: settings?.address || "Venkittapuram, Ambethkar Road",
+    // Complete address: Venkittapuram, Ambethkar Road, Coimbatore, Tamil Nadu 641025
       addressLocality: CLINIC_LOCATION.locality,
       addressRegion: CLINIC_LOCATION.region,
       postalCode: CLINIC_LOCATION.postalCode,
