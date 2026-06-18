@@ -64,6 +64,7 @@ export default function AllServicesView({ services }: AllServicesViewProps) {
       </div>
 
       {/* Services Grid */}
+      <h2 className="sr-only">All Services</h2>
       {filteredServices.length === 0 ? (
         <div className="text-center py-20 text-brand-muted text-sm border border-dashed border-brand-border rounded-3xl bg-white max-w-md mx-auto">
           No services matching your search query.

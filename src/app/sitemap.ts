@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
 import Service from "@/models/Service";
 import Gallery from "@/models/Gallery";
+import { postSlug } from "@/lib/seo";
 
 // Regenerate alongside the ISR pages so lastModified tracks content changes.
 export const revalidate = 300;
@@ -30,19 +31,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let servicesUpdated = new Date();
   let galleryUpdated = new Date();
   let blogsUpdated = new Date();
+  let blogPosts: any[] = [];
 
   try {
     await connectToDatabase();
-    [servicesUpdated, galleryUpdated, blogsUpdated] = await Promise.all([
+    [servicesUpdated, galleryUpdated, blogsUpdated, blogPosts] = await Promise.all([
       latestUpdate(Service),
       latestUpdate(Gallery, {
         category: { $in: ["gallery", "services", "doctors"] },
       }),
       latestUpdate(BlogPost),
+      BlogPost.find().select("title updatedAt").lean(),
     ]);
   } catch (err) {
     console.error("Sitemap DB error:", err);
   }
+
+  // One entry per published blog post (the indexable /blogs/[slug] detail pages).
+  const blogPostEntries: MetadataRoute.Sitemap = (blogPosts || []).map((p: any) => ({
+    url: `${base}/blogs/${postSlug({ title: p.title, _id: p._id.toString() })}`,
+    lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
 
   return [
     {
@@ -69,5 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    ...blogPostEntries,
   ];
 }

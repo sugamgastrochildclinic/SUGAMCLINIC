@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Search, Phone, Users, Stethoscope, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Search, Phone, Users, Stethoscope, RefreshCw, CheckCircle2, XCircle, UserPlus, X } from "lucide-react";
 import { classifyPatient } from "@/lib/visitReasons";
 
 type Patient = {
@@ -25,6 +25,12 @@ export default function AdminPatientsPage() {
   const [search, setSearch] = useState("");
   const [migrating, setMigrating] = useState(false);
   const [toast, setToast] = useState<Toast>(null);
+
+  // Manual "Add Patient" modal.
+  const emptyForm = { name: "", phone: "", email: "", dateOfBirth: "", gender: "", lastVisitDate: "", lastVisitReason: "" };
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchPatients();
@@ -73,6 +79,28 @@ export default function AdminPatientsPage() {
     }
   };
 
+  const addPatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Could not add patient.");
+      setToast({ type: "success", msg: `Patient added — ${data.patient.patientId}.` });
+      setShowAdd(false);
+      setForm(emptyForm);
+      fetchPatients();
+    } catch (err: any) {
+      setToast({ type: "error", msg: err.message || "Could not add patient." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return patients;
@@ -95,15 +123,24 @@ export default function AdminPatientsPage() {
             {patients.length} patient{patients.length === 1 ? "" : "s"} tracked across all bookings.
           </p>
         </div>
-        <button
-          onClick={runMigration}
-          disabled={migrating}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 transition-all cursor-pointer shadow-sm shrink-0 w-fit disabled:opacity-60"
-          title="Create patient records from existing appointments (safe to re-run)"
-        >
-          {migrating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {migrating ? "Migrating..." : "Backfill from appointments"}
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => { setForm(emptyForm); setShowAdd(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-teal hover:bg-teal-dark transition-all cursor-pointer shadow-sm w-fit"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add Patient
+          </button>
+          <button
+            onClick={runMigration}
+            disabled={migrating}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 transition-all cursor-pointer shadow-sm w-fit disabled:opacity-60"
+            title="Create patient records from existing appointments (safe to re-run)"
+          >
+            {migrating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {migrating ? "Migrating..." : "Backfill from appointments"}
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -187,6 +224,120 @@ export default function AdminPatientsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Add Patient modal */}
+      {showAdd && (
+        <div
+          className="fixed inset-0 z-[120] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => !saving && setShowAdd(false)}
+        >
+          <form
+            onSubmit={addPatient}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 sm:p-8 relative border border-slate-200 shadow-xl"
+          >
+            <button
+              type="button"
+              onClick={() => setShowAdd(false)}
+              aria-label="Close"
+              className="absolute top-5 right-5 p-2 rounded-full border border-slate-200 hover:bg-slate-50 text-slate-500 transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h2 className="font-heading font-bold text-2xl text-slate-800 mb-1">Add Patient</h2>
+            <p className="text-xs text-slate-500 mb-6">Record a walk-in or phone booking manually.</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Name <span className="text-rose-500">*</span></label>
+                <input
+                  type="text" required value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Phone <span className="text-rose-500">*</span></label>
+                <input
+                  type="tel" required value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">Email</label>
+                <input
+                  type="email" value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Date of Birth</label>
+                  <input
+                    type="date" value={form.dateOfBirth}
+                    onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Gender</label>
+                  <select
+                    value={form.gender}
+                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                  >
+                    <option value="">—</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Last Visit Date</label>
+                  <input
+                    type="date" value={form.lastVisitDate}
+                    onChange={(e) => setForm({ ...form, lastVisitDate: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Visit Reason</label>
+                  <input
+                    type="text" value={form.lastVisitReason}
+                    onChange={(e) => setForm({ ...form, lastVisitReason: e.target.value })}
+                    placeholder="e.g. Vaccination"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal/40"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-8">
+              <button
+                type="button"
+                onClick={() => setShowAdd(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-teal hover:bg-teal-dark transition-all cursor-pointer shadow-sm disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                {saving ? "Saving..." : "Add Patient"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

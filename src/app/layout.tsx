@@ -26,9 +26,9 @@ const siteTitle = "Sugam Child & Gastro Care Clinic";
 // Homepage <title> — leads with the top commercial + local keywords so the
 // city query ("pediatrician in Coimbatore") matches the title tag.
 const homeTitle =
-  "Pediatrician in Coimbatore | Neonatologist & Pediatric Gastroenterologist | Sugam Clinic";
+  "Pediatrician in Coimbatore | Sugam Child & Gastro Clinic";
 const siteDescription =
-  "Sugam Child & Gastro Care Clinic, Venkittapuram, Ambethkar Road, Coimbatore, Tamil Nadu 641025 — expert pediatric, neonatal and pediatric gastroenterology care. Trusted pediatrician in Coimbatore for newborn care, vaccinations, jaundice, stomach pain, liver disorders and child health consultations. Book an appointment today.";
+  "Expert pediatrician, neonatologist & gastro care in Venkittapuram, Coimbatore. Newborn care, vaccinations, jaundice & liver treatment. Book appointment today.";
 // Question-led variant — higher click-through on social shares.
 const siteSocialDescription =
   "Looking for a pediatrician in Coimbatore? Sugam Child & Gastro Care Clinic, Venkittapuram provides expert newborn care, child vaccinations, pediatric gastroenterology, jaundice treatment, stomach pain and liver disease care. Book your appointment today.";
@@ -50,10 +50,17 @@ export const metadata: Metadata = {
     "neonatologist Coimbatore",
     "gastroenterologist Coimbatore",
     "pediatric gastroenterologist Coimbatore",
+    "child gastro doctor Coimbatore",
     "child hospital Coimbatore",
     "liver specialist Coimbatore",
+    "pediatric liver specialist Coimbatore",
     "vaccination clinic Coimbatore",
+    "newborn care clinic Coimbatore",
+    "child stomach pain doctor Coimbatore",
+    "jaundice treatment for babies Coimbatore",
     "best child clinic Coimbatore",
+    "best child clinic Venkittapuram",
+    "pediatrician near me Coimbatore",
   ],
   alternates: { canonical: "/" },
   openGraph: {

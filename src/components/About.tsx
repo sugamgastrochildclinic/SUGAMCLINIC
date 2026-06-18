@@ -87,7 +87,7 @@ export default function About({ settings, lang }: AboutProps) {
                 className="bg-teal-tint p-8 rounded-3xl border border-teal/10 hover:shadow-lg transition-all flex-1 flex flex-col justify-center"
               >
                 <Compass className="w-10 h-10 text-teal mb-4 shrink-0" />
-                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutMission")}</h4>
+                <h3 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutMission")}</h3>
                 <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{a("aboutMissionDesc")}</p>
               </motion.div>
               <motion.div
@@ -96,7 +96,7 @@ export default function About({ settings, lang }: AboutProps) {
                 className="bg-brand-blush p-8 rounded-3xl border border-pink/10 hover:shadow-lg transition-all flex-1 flex flex-col justify-center"
               >
                 <Eye className="w-10 h-10 text-pink-safe mb-4 shrink-0" />
-                <h4 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutVision")}</h4>
+                <h3 className="font-heading font-semibold text-lg text-brand-ink mb-2">{a("aboutVision")}</h3>
                 <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{a("aboutVisionDesc")}</p>
               </motion.div>
             </div>

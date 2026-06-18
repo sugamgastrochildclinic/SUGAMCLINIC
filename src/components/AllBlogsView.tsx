@@ -1,40 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import React, { useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, BookOpen, Calendar, User, Tag, ArrowUpRight, X, Search } from "lucide-react";
+import { ArrowLeft, BookOpen, Calendar, User, ArrowUpRight, Search } from "lucide-react";
 import Link from "next/link";
 import ClientDate from "@/components/ClientDate";
-import { useFocusTrap } from "@/lib/useFocusTrap";
-import { motion, AnimatePresence } from "framer-motion";
+import { postSlug } from "@/lib/seo";
 
 interface AllBlogsViewProps {
   posts: any[];
 }
 
 export default function AllBlogsView({ posts }: AllBlogsViewProps) {
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const trapRef = useFocusTrap<HTMLDivElement>(!!selectedPost);
-
-  // Modal a11y: close on Esc, lock background scroll while open.
-  useEffect(() => {
-    if (!selectedPost) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedPost(null);
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [selectedPost]);
 
   const categories = ["all", ...Array.from(new Set(posts.map((p) => p.category || "General Health")))];
 
@@ -104,6 +83,7 @@ export default function AllBlogsView({ posts }: AllBlogsViewProps) {
       </div>
 
       {/* Grid */}
+      <h2 className="sr-only">All Articles</h2>
       {filteredPosts.length === 0 ? (
         <div className="text-center py-20 text-brand-muted text-sm border border-dashed border-brand-border rounded-3xl bg-white max-w-md mx-auto">
           No articles matching your filters.
@@ -111,15 +91,16 @@ export default function AllBlogsView({ posts }: AllBlogsViewProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredPosts.map((post) => (
-            <div
+            <Link
               key={post._id}
-              className="bg-white rounded-3xl border border-brand-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+              href={`/blogs/${postSlug(post)}`}
+              className="group bg-white rounded-3xl border border-brand-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 {/* Image */}
                 <div className="relative w-full aspect-video bg-teal-tint/30">
                   {post.image ? (
-                    <Image src={post.image} alt={post.title} fill unoptimized className="object-cover" />
+                    <Image src={post.image} alt={post.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-teal-tint text-teal/40 font-heading font-semibold text-lg">
                       Sugam Clinic
@@ -154,91 +135,14 @@ export default function AllBlogsView({ posts }: AllBlogsViewProps) {
               </div>
 
               <div className="px-6 pb-6 pt-0">
-                <button
-                  onClick={() => setSelectedPost(post)}
-                  className="flex items-center gap-1 text-teal font-semibold text-xs hover:text-teal-dark transition-colors group"
-                >
+                <span className="flex items-center gap-1 text-teal font-semibold text-xs group-hover:text-teal-dark transition-colors">
                   <span>Read Article</span>
                   <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </button>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
-      )}
-
-      {/* Article Reader Lightbox — portaled to body so the fixed navbar never
-          clips its top regardless of ancestor stacking/transform context. */}
-      {mounted && createPortal(
-      <AnimatePresence>
-      {selectedPost && (
-        <motion.div
-          ref={trapRef}
-          className="fixed inset-0 z-[100] bg-brand-ink/85 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
-          onClick={() => setSelectedPost(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={selectedPost.title || "Article"}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
-          <motion.div
-            className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto p-6 sm:p-8 relative border border-brand-border"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <button
-              onClick={() => setSelectedPost(null)}
-              aria-label="Close article"
-              className="absolute top-6 right-6 p-2 rounded-full border border-brand-border hover:bg-brand-blush text-brand-ink transition-all active:scale-95 cursor-pointer z-10 bg-white/80 backdrop-blur-sm"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <span className="text-[10px] font-bold bg-teal-tint px-3 py-1 rounded-full text-teal-dark border border-teal/20 uppercase tracking-wider">
-              {selectedPost.category}
-            </span>
-
-            <h3 className="font-heading font-bold text-2xl sm:text-3xl text-brand-ink mt-4 mb-4 pr-12">
-              {selectedPost.title}
-            </h3>
-
-            <div className="flex items-center gap-4 text-xs text-brand-muted font-bold uppercase mb-6 pb-6 border-b border-brand-border">
-              <span>By {selectedPost.author}</span>
-              <span>•</span>
-              <span>{new Date(selectedPost.createdAt).toLocaleDateString()}</span>
-            </div>
-
-            {selectedPost.image && (
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6 border border-brand-border bg-teal-tint/30">
-                <Image src={selectedPost.image} alt={selectedPost.title} fill unoptimized className="object-cover" />
-              </div>
-            )}
-
-            <div className="text-sm sm:text-base text-brand-ink leading-relaxed space-y-4 whitespace-pre-wrap">
-              {selectedPost.content}
-            </div>
-
-            {selectedPost.tags && selectedPost.tags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mt-8 pt-6 border-t border-brand-border">
-                <Tag className="w-4 h-4 text-brand-muted shrink-0" />
-                {selectedPost.tags.map((tag: string, i: number) => (
-                  <span key={i} className="text-xs bg-brand-blush text-pink-safe px-2.5 py-1 rounded-lg font-semibold">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-      </AnimatePresence>,
-      document.body
       )}
     </div>
   );

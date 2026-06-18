@@ -9,7 +9,7 @@ export const SITE_URL =
 export const SITE_NAME = "Sugam Child & Gastro Care Clinic";
 
 export const SITE_DESCRIPTION =
-  "Sugam Child & Gastro Care Clinic, Venkittapuram, Ambethkar Road, Coimbatore, Tamil Nadu 641025 — pediatrician, neonatologist & pediatric gastroenterologist for newborn care, child vaccination, jaundice, stomach pain, and liver disease treatment.";
+  "Pediatrician, neonatologist & gastro care in Venkittapuram, Coimbatore. Newborn care, child vaccination, jaundice, stomach pain & liver disease treatment. Book today.";
 
 export const DEFAULT_OG_IMAGE = "/hero-logo-desktop.jpg";
 
@@ -20,12 +20,21 @@ export const CLINIC_LOCATION = {
   region: "Tamil Nadu",
   postalCode: "641025",
   country: "IN",
-  // Neighbourhood + landmarks the master keyword list targets.
+  // Neighbourhood + landmarks the master keyword list targets. Expanded with the
+  // nearby zones from the local-SEO keyword checklist so the LocalBusiness
+  // areaServed schema signals coverage for "near me" / area-specific searches.
   areaServed: [
     "Coimbatore",
     "Venkittapuram",
     "Ambethkar Road",
     "Sindhi Vidyalaya",
+    "Singanallur",
+    "Peelamedu",
+    "Ramanathapuram",
+    "Ondipudur",
+    "Saibaba Colony",
+    "Gandhipuram",
+    "Coimbatore South",
   ],
 };
 
@@ -44,7 +53,10 @@ export const KEYWORDS = {
     "neonatologist Coimbatore",
     "gastroenterologist Coimbatore",
     "pediatric gastroenterologist Coimbatore",
+    "child gastro doctor Coimbatore",
+    "pediatric liver specialist Coimbatore",
     "best child clinic Coimbatore",
+    "best child clinic Venkittapuram",
   ],
   services: [
     "pediatric consultation Coimbatore",
@@ -59,6 +71,31 @@ export const KEYWORDS = {
     "child vaccination centre Coimbatore",
     "newborn care clinic Coimbatore",
     "premature baby specialist Coimbatore",
+    "child stomach pain doctor Coimbatore",
+    "jaundice treatment for babies Coimbatore",
+    "child liver disease doctor Coimbatore",
+    "child diarrhea treatment Coimbatore",
+    "child constipation doctor Coimbatore",
+    "child vomiting treatment Coimbatore",
+    "child growth monitoring Coimbatore",
+  ],
+  // Area-specific + "near me" terms from the local-SEO checklist. Ranking for
+  // these is driven mainly by Google Business Profile proximity, but listing
+  // them keeps Bing/AI targeting and areaServed schema aligned.
+  local: [
+    "pediatrician near me Coimbatore",
+    "child doctor near Singanallur",
+    "child specialist near Peelamedu",
+    "pediatrician near Ramanathapuram Coimbatore",
+    "baby doctor near Ondipudur",
+    "child clinic near Saibaba Colony",
+    "child doctor Gandhipuram Coimbatore",
+    "child specialist near Venkittapuram",
+    "pediatric clinic Ambedkar Road Coimbatore",
+    "child gastro clinic near me Coimbatore",
+    "baby jaundice treatment near me Coimbatore",
+    "child specialist Coimbatore South",
+    "best pediatric gastroenterologist near Coimbatore",
   ],
   blog: [
     "child immunization schedule India",
@@ -304,6 +341,63 @@ export function blogListSchema(
     name: `${SITE_NAME} — Health Blog`,
     url: abs("/blogs"),
     ...(blogPosts.length && { blogPost: blogPosts }),
+  };
+}
+
+/** Slugify a title for SEO-friendly URLs (lowercase, hyphenated, ascii). */
+export function slugify(text = "") {
+  return String(text)
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+/**
+ * Canonical blog post slug: keyword-rich title + Mongo _id suffix. The _id has
+ * no hyphens, so the last "-" segment is always the id — no DB migration or
+ * slug column needed, and titles can change without breaking the URL.
+ */
+export function postSlug(post: { title?: string; _id?: string }) {
+  const id = String(post?._id || "");
+  return `${slugify(post?.title)}-${id}`;
+}
+
+/** Extract the Mongo _id from a post slug (last hyphen segment). */
+export function idFromSlug(slug = "") {
+  const parts = String(slug).split("-");
+  return parts[parts.length - 1] || "";
+}
+
+/** Single-article BlogPosting schema (used on /blogs/[slug]). */
+export function blogPostSchema(
+  post: {
+    title?: string;
+    content?: string;
+    author?: string;
+    image?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    _id?: string;
+  },
+  url: string
+) {
+  return {
+    "@type": "BlogPosting",
+    "@id": `${url}#article`,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    headline: String(post.title || "").slice(0, 110),
+    ...(post.content && {
+      description: String(post.content).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, 200),
+    }),
+    ...(post.author && { author: { "@type": "Person", name: post.author } }),
+    ...(post.image && { image: abs(post.image) }),
+    ...(post.createdAt && { datePublished: post.createdAt }),
+    ...(post.updatedAt && { dateModified: post.updatedAt }),
+    publisher: { "@id": `${SITE_URL}/#organization` },
+    isPartOf: { "@id": `${SITE_URL}/blogs#blog` },
   };
 }
 

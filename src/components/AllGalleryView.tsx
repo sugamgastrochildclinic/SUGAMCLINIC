@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ZoomIn, Eye, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
 interface AllGalleryViewProps {
@@ -102,9 +103,12 @@ export default function AllGalleryView({ gallery }: AllGalleryViewProps) {
               onClick={() => setSelectedImg(item.imageUrl)}
               className="relative aspect-square rounded-3xl overflow-hidden border border-brand-border cursor-pointer group shadow-sm bg-white"
             >
-              <img
+              <Image
                 src={item.imageUrl}
                 alt={item.caption || "Clinic Photo"}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                quality={72}
                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
               />
               
@@ -143,6 +147,7 @@ export default function AllGalleryView({ gallery }: AllGalleryViewProps) {
             <img
               src={selectedImg}
               alt="Clinic Lightbox View"
+              decoding="async"
               className="object-contain max-w-full max-h-[85vh] rounded-2xl"
             />
           </div>

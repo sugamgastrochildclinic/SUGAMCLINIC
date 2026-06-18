@@ -61,6 +61,19 @@ const nextConfig = {
       { source: '/:path*', headers: securityHeaders },
     ];
   },
+  // Force a single canonical host: 301 www → apex (non-www). Prevents the
+  // duplicate-content / split-PageRank flagged by the audits (www and non-www
+  // both resolving). Apex is the canonical version used in metadataBase.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.sugamgastrochildclinic.com' }],
+        destination: 'https://sugamgastrochildclinic.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
