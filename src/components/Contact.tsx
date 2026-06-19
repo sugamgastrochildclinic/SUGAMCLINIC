@@ -133,7 +133,7 @@ export default function Contact({ settings, lang }: ContactProps) {
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactLocation}</h4>
+                      <h5 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactLocation}</h5>
                       <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{address}</p>
                     </div>
                   </div>
@@ -144,7 +144,7 @@ export default function Contact({ settings, lang }: ContactProps) {
                       <Phone className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactCall}</h4>
+                      <h5 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactCall}</h5>
                       <a href={`tel:${phone}`} className="text-xs sm:text-sm text-teal-dark font-bold hover:underline block">{phone}</a>
                     </div>
                   </div>
@@ -155,7 +155,7 @@ export default function Contact({ settings, lang }: ContactProps) {
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactMail}</h4>
+                      <h5 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactMail}</h5>
                       <a href={`mailto:${email}`} className="text-xs sm:text-sm text-pink-safe font-bold hover:underline block">{email}</a>
                     </div>
                   </div>
@@ -166,7 +166,7 @@ export default function Contact({ settings, lang }: ContactProps) {
                       <Clock className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactHours}</h4>
+                      <h5 className="text-xs font-bold text-brand-ink uppercase tracking-wider mb-1">{t.contactHours}</h5>
                       <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">{workingHours}</p>
                     </div>
                   </div>

@@ -3,8 +3,9 @@
 // AI crawlers read them without executing JS. All builders return plain objects
 // that get serialized by the <JsonLd> component.
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+).replace(/\/+$/, "");
 
 export const SITE_NAME = "Sugam Child & Gastro Care Clinic";
 

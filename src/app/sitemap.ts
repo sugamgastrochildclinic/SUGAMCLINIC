@@ -25,7 +25,9 @@ async function latestUpdate(model: any, filter: Record<string, any> = {}) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Public origin — NOT NEXTAUTH_URL (an auth var). Set NEXT_PUBLIC_SITE_URL to
   // the real domain in production so emitted URLs aren't localhost.
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://sugamgastrochildclinic.com";
+  // Strip any trailing slash so `${base}/services` never produces a "//" URL
+  // (the env var is sometimes set with a trailing slash).
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://sugamgastrochildclinic.com").replace(/\/+$/, "");
 
   // Defaults so the sitemap still builds if the DB is unreachable.
   let servicesUpdated = new Date();
