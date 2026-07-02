@@ -28,7 +28,7 @@ import { resolvePatientForBooking } from "@/lib/patients";
 const bookingSchema = z.object({
   name: z.string().trim().min(1).max(120),
   phone: z.string().trim().min(7).max(20),
-  email: z.string().trim().email().max(160),
+  email: z.string().trim().email().max(160).optional().or(z.literal("")),
   date: z.string().trim().min(1).max(20),
   time: z.string().trim().min(1).max(40),
   doctor: z.string().refine((v) => mongoose.isValidObjectId(v), "Invalid doctor id"),
@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
       const patient = await resolvePatientForBooking({
         name: data.name,
         phone: data.phone,
-        email: data.email,
+        email: data.email || "",
         date: data.date,
         visitReason: data.visitReason,
       });
@@ -198,41 +198,44 @@ export async function POST(req: NextRequest) {
 
     // Send emails in background via waitUntil so user booking is instant
     const clinicEmail = process.env.EMAIL_FROM || "info@sugamclinic.com";
-    waitUntil(
-      Promise.all([
-        sendEmail({
-          to: clinicEmail,
-          subject: sanitizeHeader(`New Appointment Booking Request - ${data.name}`),
-          html: renderEmail({
-            title: "New appointment booking request",
-            previewText: `New booking from ${data.name}`,
-            bodyHtml: `
-              <p style="margin:0 0 8px;">A new appointment request was submitted.</p>
-              ${infoTable(
-                infoRow("Patient", data.name) +
-                infoRow("Phone", data.phone) +
-                infoRow("Email", data.email) +
-                infoRow("Date", data.date) +
-                infoRow("Time slot", data.time) +
-                infoRow("Doctor", doctorName) +
-                infoRow("Visit reason", data.visitReason)
-              )}
-              ${data.symptoms ? quoteBlock("Symptoms", nl2br(data.symptoms)) : ""}
-              ${data.additionalNotes ? quoteBlock("Additional notes", nl2br(data.additionalNotes)) : ""}
-              ${data.message ? quoteBlock("Message", nl2br(data.message)) : ""}
-              ${
-                data.isChild
-                  ? quoteBlock(
-                      "Child details (Vaccination Program)",
-                      `Name: ${esc(data.childName)}<br/>DOB: ${esc(data.childDob)}<br/>Reminders: ${
-                        data.vaccinationReminderEnabled ? "Enabled" : "Disabled"
-                      }`
-                    )
-                  : ""
-              }
-            `,
-          }),
+    const emailPromises: Promise<any>[] = [
+      sendEmail({
+        to: clinicEmail,
+        subject: sanitizeHeader(`New Appointment Booking Request - ${data.name}`),
+        html: renderEmail({
+          title: "New appointment booking request",
+          previewText: `New booking from ${data.name}`,
+          bodyHtml: `
+            <p style="margin:0 0 8px;">A new appointment request was submitted.</p>
+            ${infoTable(
+              infoRow("Patient", data.name) +
+              infoRow("Phone", data.phone) +
+              infoRow("Email", data.email || "Not provided") +
+              infoRow("Date", data.date) +
+              infoRow("Time slot", data.time) +
+              infoRow("Doctor", doctorName) +
+              infoRow("Visit reason", data.visitReason)
+            )}
+            ${data.symptoms ? quoteBlock("Symptoms", nl2br(data.symptoms)) : ""}
+            ${data.additionalNotes ? quoteBlock("Additional notes", nl2br(data.additionalNotes)) : ""}
+            ${data.message ? quoteBlock("Message", nl2br(data.message)) : ""}
+            ${
+              data.isChild
+                ? quoteBlock(
+                    "Child details (Vaccination Program)",
+                    `Name: ${esc(data.childName)}<br/>DOB: ${esc(data.childDob)}<br/>Reminders: ${
+                      data.vaccinationReminderEnabled ? "Enabled" : "Disabled"
+                    }`
+                  )
+                : ""
+            }
+          `,
         }),
+      })
+    ];
+
+    if (data.email) {
+      emailPromises.push(
         sendEmail({
           to: data.email,
           subject: `Sugam Clinic - Appointment Request Received`,
@@ -251,7 +254,11 @@ export async function POST(req: NextRequest) {
             `,
           }),
         })
-      ]).catch(err => {
+      );
+    }
+
+    waitUntil(
+      Promise.all(emailPromises).catch(err => {
         console.error("Async booking email notification failed:", err);
       })
     );
@@ -273,10 +280,10 @@ export async function PUT(req: NextRequest) {
     const appointment = await Appointment.findByIdAndUpdate(
       id,
       { status },
-      { new: true, runValidators: true }
+      { new: new Date().toString() === "never" ? false : true, runValidators: true }
     ).populate("doctor", "name");
     
-    if (appointment) {
+    if (appointment && appointment.email) {
       // Send update email to patient
       await sendEmail({
         to: appointment.email,

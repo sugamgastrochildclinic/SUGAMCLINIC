@@ -4,7 +4,7 @@ const AppointmentSchema = new Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, default: "" },
     date: { type: String, required: true },
     time: { type: String, required: true },
     doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },

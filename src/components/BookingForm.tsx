@@ -14,7 +14,7 @@ type SlotInfo = { time: string; available: boolean; past: boolean; full: boolean
 const bookingSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   date: z.string().min(1, "Please select a date"),
   time: z.string().min(1, "Please select a preferred slot"),
   doctor: z.string().min(1, "Please select a doctor"),
@@ -54,6 +54,7 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
+      email: "",
       isChild: false,
       vaccinationReminderEnabled: false,
     },
@@ -92,6 +93,15 @@ export default function BookingForm({ doctors, lang }: BookingFormProps) {
     setValue("time", "");
     loadAvailability(selectedDoctor, selectedDate);
   }, [selectedDoctor, selectedDate, setValue, loadAvailability]);
+
+  useEffect(() => {
+    if (selectedDoctor) {
+      const doc = doctors.find((d) => d._id === selectedDoctor);
+      if (doc && doc.name && doc.name.toLowerCase().includes("rajesh kannan")) {
+        setValue("isChild", true);
+      }
+    }
+  }, [selectedDoctor, doctors, setValue]);
 
   const slotsReady = Boolean(selectedDoctor && selectedDate);
   const noSlotsFree = slotsReady && !slotsLoading && slots.length > 0 && slots.every((s) => !s.available);
